@@ -1,6 +1,5 @@
 import React from 'react';
 
-import { Modal, OverwriteModalStyle } from './Modal';
 import { OverwriteDividerStyle } from './Divider';
 import { OverwriteFormStyle } from './Form';
 export {PageContent as PageContent} from './PageContent';
@@ -16,11 +15,7 @@ export const Restyled = () => {
     <>
       <OverwriteFormStyle />
       <OverwriteDividerStyle />
-      <OverwriteModalStyle />
     </>
   );
 };
 
-export {
-  Modal,
-};

@@ -9,5 +9,6 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
+  if (req.aborted) void 0;
   res.status(200).json({ name: 'Ada Lovelace' })
 }

@@ -1,6 +1,6 @@
 import React, { FC, memo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import BareProps from '../types'
+import { BareProps } from '../types'
 
 
 interface LoadingProps extends BareProps {
@@ -65,7 +65,7 @@ export const Loading: FC<LoadingProps> = memo(({ className, size, width }) => {
     <LoadingRoot
       className={className}
       size={size}
-      width={width ?? 4 }
+      width={width ?? 4}
     >
       <div />
       <div />

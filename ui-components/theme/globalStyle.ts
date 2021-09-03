@@ -12,7 +12,7 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   font-variant-numeric: tabular-nums;
   font-weight: 400;
-  color: ${({ theme }) => theme.text.primary};
+  color: #ffffff;
 }
 
 
@@ -49,11 +49,11 @@ p, span {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: ${({ theme }) => theme.colors.gray2};
+  background: #4F4F4F;
 }
 
 *::-webkit-scrollbar-track {
-  background: ${({ theme }) => theme.colors.gray1};
+  background: #333333;
 }
 
 h1, h2, h3, h4, h5, h6 {

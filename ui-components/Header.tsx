@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import useUser from '../lib/useUser'
 import { useRouter } from 'next/router'
-import fetchJson from '../lib/fetchJson'
+// import fetchJson from '../lib/fetchJson'
 
 const Header = () => {
   const { user, mutateUser } = useUser()
@@ -23,26 +23,7 @@ const Header = () => {
               </Link>
             </li>
           )}
-          {user?.isLoggedIn && (
-            <>
-              {/* LOGOUT */}
-              <li>
-                <a
-                  href="/api/logout"
-                  onClick={async (e) => {
-                    e.preventDefault()
-                    mutateUser(
-                      await fetchJson('/api/logout', { method: 'POST' }),
-                      false
-                    )
-                    router.push('/login')
-                  }}
-                >
-                  Logout
-                </a>
-              </li>
-            </>
-          )}
+          
           <li>
             <a href="https://github.com/vvo/next-iron-session">
               <img src="/GitHub-Mark-Light-32px.png" width="32" height="32" />
@@ -87,5 +68,26 @@ const Header = () => {
     </header>
   )
 }
+
+// {user?.isLoggedIn && (
+//   <>
+//     {/* LOGOUT */}
+//     <li>
+//       <a
+//         href="/api/logout"
+//         onClick={async (e) => {
+//           e.preventDefault()
+//           mutateUser(
+//             await fetchJson('/api/logout', { method: 'POST' }),
+//             false
+//           )
+//           router.push('/login')
+//         }}
+//       >
+//         Logout
+//       </a>
+//     </li>
+//   </>
+// )}
 
 export default Header

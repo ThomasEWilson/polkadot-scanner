@@ -10,9 +10,7 @@
   },
   "dependencies": {
     "@polkadot/api": "^5.6.1",
-    "@polkadot/react-components": "^0.39.1",
-    "@polkadot/react-hooks": "^0.39.1",
-    "@polkadot/react-query": "^0.39.1",
+    "@polkadot/jsonrpc": "^1.7.1",
     "@polkadot/types-known": "^5.7.1",
     "@reduxjs/toolkit": "^1.6.1",
     "antd": "^4.16.12",

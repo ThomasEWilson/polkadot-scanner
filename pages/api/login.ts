@@ -1,20 +1,38 @@
-import fetchJson from "../../lib/fetchJson";
-import withSession from "../../lib/session";
+// import fetchJson from "../../lib/fetchJson";
+// import withSession from "../../lib/session";
 
 
-export default withSession(async (req, res) => {
-  const { username } = await req.body;
-  const url = `https://api.github.com/users/${username}`;
+// export default withSession(async (req, res) => {
+//   // const { username } = await req.body;
+//   // const url = `https://api.github.com/users/${username}`;
 
-  try {
-    // we check that the user exists on GitHub and store some data in session
-    const { login, avatar_url: avatarUrl } = await fetchJson(url);
-    const user = { isLoggedIn: true, login, avatarUrl };
-    req.session.set("user", user);
-    await req.session.save();
-    res.json(user);
-  } catch (error) {
-    const { response: fetchResponse } = error;
-    res.status(fetchResponse?.status || 500).json(error.data);
-  }
-});
+//   try {
+//     // we check that the user exists on GitHub and store some data in session
+//   //   const { login, avatar_url: avatarUrl } = await fetchJson(url);
+//   //   const user = { isLoggedIn: true, login, avatarUrl };
+//   //   req.session.set("user", user);
+//   //   await req.session.save();
+//     // res.json(user);
+//     res.json({ name: 'Ada Lovelace' });
+//   } catch (error) {
+//   //   const { response: fetchResponse } = error;
+//     // res.status(fetchResponse?.status || 500).json(error.data);
+//     res.status(200).json({ name: 'Ada Lovelace' })
+
+//   }
+// });
+
+
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+type Data = {
+  name: string
+}
+
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) {
+  if (req.aborted) void 0;
+  res.status(200).json({ name: 'Ada Lovelace' })
+}

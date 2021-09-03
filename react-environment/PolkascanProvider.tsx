@@ -1,12 +1,11 @@
 import React, { FC, useEffect, useRef } from 'react'
 import { SWRConfig } from 'swr'
-import fetch from '../lib/fetchJson'
 import { Provider as ReduxProvider, useDispatch } from 'react-redux';
-import { store, StateSideEffect, StoreDispatch } from '../react-environment/state'
-import { setSubscanBaseUrl } from '../react-environment/state/modules/application/actions';
-import {useSetEndpoints} from '../react-environment/state/modules/api/hooks'
-import { useApplicationConfig } from '../react-environment/hooks/useApplicationConfig';
-import ApplicationConfig from '../react-environment/types';
+import { store, StateSideEffect, StoreDispatch } from './state'
+import { setSubscanBaseUrl } from './state/modules/application/actions';
+import {useSetEndpoints} from './state/modules/api/hooks'
+import { useApplicationConfig } from './hooks/useApplicationConfig';
+import ApplicationConfig from './types';
 import ThemeProvider from '../ui-components/theme/ThemeProvider';
 import { Layout } from '../ui-components';
 import { SidebarConfig } from '/ui-components/types';

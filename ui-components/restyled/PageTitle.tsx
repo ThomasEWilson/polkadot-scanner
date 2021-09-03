@@ -2,6 +2,8 @@ import React, { FC, ReactNode } from 'react';
 import styled, { DefaultTheme, StyledComponent } from 'styled-components';
 
 import { flexBox, getThemeConfig, typography } from '../utils';
+import { BareProps } from '../types';
+
 
 const PageTitleContent = styled.div`
     flex: 1;

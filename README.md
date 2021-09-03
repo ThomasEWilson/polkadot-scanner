@@ -1,6 +1,13 @@
 
 ## Polkadot Scanner Server
 
+    "@polkadot/app-contracts": "^0.39.1",
+    "@polkadot/react-components": "^0.39.1",
+    "@polkadot/react-hooks": "^0.39.1",
+    "@polkadot/react-params": "^0.39.1",
+    "@polkadot/react-query": "^0.39.1",
+    "@polkadot/react-signer": "^0.39.1",
+    "@polkadot/ui-assets": "^0.85.3",
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 

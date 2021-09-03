@@ -1,9 +1,9 @@
-// this file is a wrapper with defaults to be used in both API routes and `getServerSideProps` functions
+// // this file is a wrapper with defaults to be used in both API routes and `getServerSideProps` functions
 import { withIronSession } from 'next-iron-session'
 
-export default function withSession(handler) {
+export default function withSession(handler: any) {
   return withIronSession(handler, {
-    password: process.env.SECRET_COOKIE_PASSWORD,
+    password: process.env.SECRET_COOKIE_PASSWORD ?? '',
     cookieName: 'next.js/examples/with-iron-session',
     cookieOptions: {
       // the next line allows to use the session in non-https environments like

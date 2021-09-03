@@ -5,6 +5,6 @@ export function typography (fontSize: number, lineHeight: number, fontWeight: nu
     font-size: ${fontSize}px;
     font-weight: ${fontWeight};
     line-height: ${lineHeight < 10 ? lineHeight : `${lineHeight}px`};
-    color: ${(theme.text as any)[color || ''] ?? (theme.colors as any)[color || ''] ?? color ?? theme.text.primary};
+    color: #ffffff;
   `;
 }
