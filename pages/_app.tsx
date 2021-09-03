@@ -1,7 +1,18 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import React from 'react'
+import type { AppProps /*, AppContext */ } from 'next/app'
+import { PolkascanProvider } from './PolkascanProvider'
+import '../styles/Home.module.css';
+
+import { config, sidebarConfig } from './config';
 
 function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+  return (
+    <PolkascanProvider config={config}
+                        sidebarConfig={sidebarConfig}>
+      <Component {...pageProps} />
+    </PolkascanProvider>
+  )
+
 }
 export default MyApp
+
