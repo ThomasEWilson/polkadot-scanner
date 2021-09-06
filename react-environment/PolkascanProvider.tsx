@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useRef } from 'react'
+import Router from 'next/router';
 import { SWRConfig } from 'swr'
 import { Provider as ReduxProvider, useDispatch } from 'react-redux';
 import { store, StateSideEffect, StoreDispatch } from './state'
@@ -9,18 +10,35 @@ import ApplicationConfig from './types';
 import ThemeProvider from '../ui-components/theme/ThemeProvider';
 import { Layout } from '../ui-components';
 import { SidebarConfig } from '/ui-components/types';
+import { useUser } from './state/modules/application/hooks';
 
 
 export type PolkascanProps = React.PropsWithChildren<{
     config: ApplicationConfig;
     sidebarConfig: SidebarConfig;
+    router: typeof Router;
 }>;
 
-export const Inner: FC<PolkascanProps> = ({ children, config, sidebarConfig }) => {
+//check if you are on the client (browser) or server
+const isBrowser = () => typeof window !== "undefined";
+
+export const Inner: FC<PolkascanProps> = ({ children, config, sidebarConfig, router }) => {
 
     const _config = useApplicationConfig(config);
     const dispatch = useDispatch<StoreDispatch>();
     const setEndpoints = useRef(useSetEndpoints());
+    const isUserAuthenticated = useUser();
+
+    let unprotectedRoutes = ['/'];
+
+    useEffect(() => {
+        if (!router) return;
+        
+        let pathIsProtected = unprotectedRoutes.indexOf(router.pathname) === -1;
+        if (isBrowser() && !isUserAuthenticated && pathIsProtected) {
+            router.push('/');
+        }
+    }, [router, router?.pathname, isUserAuthenticated, unprotectedRoutes]);
 
     useEffect(() => {
         dispatch(setSubscanBaseUrl({ subscanBaseUrl: config.subscanBaseUrl }));

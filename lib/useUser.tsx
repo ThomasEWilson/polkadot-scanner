@@ -1,12 +1,19 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Router from 'next/router'
 import useSWR from 'swr'
+import {fetcher as fetchJson} from '/lib';
 
-export default function useUser({
+export default async function useUser({
   redirectTo = "",
   redirectIfFound = false,
 } = {}) {
-  const { data: user, mutate: mutateUser } = useSWR('/api/user')
+  const [ user, mutateUser ] = useState<any>();
+
+  try {
+    mutateUser(await fetchJson('/api/user'))
+  } catch (error) {
+    console.error('Failed Fetching User: ', error);
+  }
 
   useEffect(() => {
     // if no redirect needed, just return (example: already on /dashboard)

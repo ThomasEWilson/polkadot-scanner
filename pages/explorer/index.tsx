@@ -1,20 +1,16 @@
 import type { NextPage } from 'next'
 import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components'
-import useUser from '../../lib/useUser';
+import { useUser } from '/react-environment/state/modules/application/hooks';
 
-const CH3 = styled.h3`text-align: center; padding: 20px 5px;`
+const CH3 = styled.h3`text-align: center; padding: 20px 5px; color: white; font-size: 10rem;`
 
-const Explorer: NextPage = () => {
+const Explorer: NextPage = ({router}) => {
   // Authorization Required for Scanner Access
 
   // Requesting User from client, if not present redirect to Login.
-  const { user } = useUser({ redirectTo: '/login', redirectIfFound: false })
+  const isLoggedIn = useUser();
 
-  // LOADING...if not Authorized yet
-  if (!user || user.isLoggedIn === false) {
-    return (<h1>loading...</h1>)
-  }
 
   // POLKASCANNER Scanner Feature.
   return (

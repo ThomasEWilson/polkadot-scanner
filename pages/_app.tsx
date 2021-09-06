@@ -5,10 +5,11 @@ import '../styles/Home.module.css';
 
 import { config, sidebarConfig } from '../react-environment/config';
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps, router }: AppProps) {
   return (
     <PolkascanProvider config={config}
-                        sidebarConfig={sidebarConfig}>
+                        sidebarConfig={sidebarConfig}
+                        router={router}>
       <Component {...pageProps} />
     </PolkascanProvider>
   )

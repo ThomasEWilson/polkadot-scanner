@@ -1,13 +1,14 @@
 import { createReducer } from '@reduxjs/toolkit';
 
-import { setModalvisible, setSubscanBaseUrl, setTheme, setTitle } from './actions';
+import { setModalvisible, setSubscanBaseUrl, setTheme, setTitle, setUser } from './actions';
 import { ApplicationState } from './types';
 
 const initState: ApplicationState = {
   modal: {},
   subscanBaseUrl: '',
   theme: 'default',
-  title: ''
+  title: '',
+  user: false
 };
 
 export const applicationReducer = createReducer(initState, (builder) => {
@@ -17,6 +18,8 @@ export const applicationReducer = createReducer(initState, (builder) => {
     state.subscanBaseUrl = action.payload.subscanBaseUrl;
   }).addCase(setTitle, (state, action) => {
     state.title = action.payload.title;
+  }).addCase(setUser, (state, action) => {
+    state.user = action.payload.user;
   }).addCase(setModalvisible, (state, action) => {
     const { data, key, visible } = action.payload;
 

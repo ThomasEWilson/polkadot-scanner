@@ -4,4 +4,6 @@ export interface ApplicationState {
     theme: string;
     title: string;
     subscanBaseUrl: string;
+    user: boolean;
 }
+
