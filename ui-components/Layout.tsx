@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import Head from 'next/head'
-import Header from './Header'
 import { Page } from './restyled/Page'
 import { Sidebar, PageContent, PageTitle, FlexBox } from './';
 import { WaitApiIsReady } from '../react-environment/state/modules/api/components/WaitApiIsReady';

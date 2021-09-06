@@ -1,14 +1,15 @@
 import type { NextPage } from 'next'
 import React, { useEffect, useRef } from 'react';
+import styled from 'styled-components'
 import useUser from '../../lib/useUser';
-// import styles from '../../styles/Home.module.css'
-import {Page, PageContent} from '../../ui-components/restyled'
 
-const Home: NextPage = () => {
+const CH3 = styled.h3`text-align: center; padding: 20px 5px;`
+
+const Explorer: NextPage = () => {
   // Authorization Required for Scanner Access
 
   // Requesting User from client, if not present redirect to Login.
-  const { user } = useUser({ redirectTo: '/login' })
+  const { user } = useUser({ redirectTo: '/login', redirectIfFound: false })
 
   // LOADING...if not Authorized yet
   if (!user || user.isLoggedIn === false) {
@@ -17,12 +18,8 @@ const Home: NextPage = () => {
 
   // POLKASCANNER Scanner Feature.
   return (
-    <Page>
-      <PageContent>
-        <h2>Friendly Polkadot Scanner</h2>
-      </PageContent>
-    </Page>
+    <CH3>EXPLORER</CH3>
   )
 }
 
-export default Home;
+export default Explorer;

@@ -1,6 +1,6 @@
-export default async function fetcher(input: RequestInfo) {
+export default async function fetcher(...args) {
     try {
-      const response = await fetch(input)
+      const response = await fetch(...args)
   
       // if the server replies, there's always some data in json
       // if there's a network error, it will throw at the previous line
@@ -10,9 +10,7 @@ export default async function fetcher(input: RequestInfo) {
         return data
       }
   
-      const error = new Error(response.statusText)
-      // error.response = response
-      // error.data = data
+      const error = {response: response, data: data}
       throw error
     } catch (error) {
       if (!error.data) {

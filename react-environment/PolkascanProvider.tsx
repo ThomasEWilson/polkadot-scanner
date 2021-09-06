@@ -11,7 +11,6 @@ import { Layout } from '../ui-components';
 import { SidebarConfig } from '/ui-components/types';
 
 
-
 export type PolkascanProps = React.PropsWithChildren<{
     config: ApplicationConfig;
     sidebarConfig: SidebarConfig;

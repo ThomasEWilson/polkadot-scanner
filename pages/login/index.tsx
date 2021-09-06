@@ -1,5 +1,4 @@
-import { NextPage } from 'next'
-import React, { useMemo, useState, useRef, useCallback, useEffect } from 'react'
+import React, { useMemo, useState, useRef, useCallback, useEffect, FC } from 'react'
 import { Subscription } from 'rxjs';
 import styled from 'styled-components'
 import {Input} from 'antd'
@@ -8,12 +7,17 @@ import useUser from '../../lib/useUser'
 import { Button, Card, FlexBox, Form } from '/ui-components'
 import {flexBox, typography} from '/ui-components/utils'
 import { useDataChanger } from '../../lib'
-import { debounce } from 'lodash'
 import { FormItem } from '/ui-components/Form'
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
-
-
-// import fetchJson from '../../lib/fetchJson'
+import {
+  naclDecrypt,
+  naclEncrypt,
+} from '@polkadot/util-crypto';
+import {
+  stringToU8a,
+  u8aToString
+} from '@polkadot/util';
+import {fetcher as fetchJson} from '/lib';
 
 const CForm = styled(Form)`
   margin-top: 60px;
@@ -43,70 +47,82 @@ const CCard = styled(Card)`
   background: linear-gradient(101.18deg, rgba(255, 255, 255, 0) 1.64%, rgba(255, 255, 255, 0.1) 112.71%) no-repeat border-box padding-box, linear-gradient(rgb(34, 34, 34), rgb(34, 34, 34)) padding-box, linear-gradient(50.94deg, rgba(228, 12, 91, 0) 48.71%, rgba(255, 76, 59, 0.6) 94.76%) border-box rgb(34, 34, 34);
 `;
 
-interface FormData {
-  password: string;
+interface FormData { password: string; }
+interface LoginProps { 
+  stringu8a_Secret: string; 
+  stringu8a_Nonce: string;
 }
 
-const Login: NextPage = () => {
+// This function gets called at build time on server-side.
+// It won't be called on client-side, so you can even do
+// direct database queries. See the "Technical details" section.
+export async function getStaticProps() {
+  const stringu8a_Secret = process.env.SECRET_u8a;
+  const stringu8a_Nonce = process.env.NONCE;
+  return {
+    props: {
+      stringu8a_Secret,
+      stringu8a_Nonce
+    },
+  }
+}
+
+const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
   // Grab User, redirect to scanner if Authorized.
   const { mutateUser } = useUser({
-    redirectTo: 'explorer',
+    redirectTo: '/explorer',
     redirectIfFound: true,
   })
+
+  const setTitle = useSetTitle();
+  useEffect(() => setTitle('Login'), [setTitle]);
 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [form] = Form.useForm<FormData>();
   const subscription = useRef<Subscription>();
-  const setTitle = useSetTitle();
-
-  // const initData = useMemo(() => ({
-  //   input: { amount: 0, token: stableToken },
-  //   output: { amount: 0, token: nativeToken }
-  // }), [nativeToken, stableToken]);
+  const [passwd, setPassword] = useState('communityFirst');
+  
   const initData: FormData = { password: '' };
 
-  const { data, dataRef, update } = useDataChanger<FormData>(initData);
+  const stringU8A_to_Uint8Array = (str) => {
+    const u8a = new Uint8Array(str.split(',').map(x => +x));
+    return u8a;
+  }
 
-  useEffect(() => setTitle('Login'), [setTitle]);
+  async function loginFn() {
 
+      const uint8array_Secret = stringU8A_to_Uint8Array(stringu8a_Secret);
+      const uint8array_Nonce = stringU8A_to_Uint8Array(stringu8a_Nonce);
 
-  const setInputValue = useCallback((num?: string) => {
-    const _data = { password: dataRef.current.password };
+      const passwordPreEncryption = stringToU8a(passwd);
+      // console.log(passwordPreEncryption);
+        // Encrypt the message
+      const { encrypted, nonce } = naclEncrypt(passwordPreEncryption, uint8array_Secret, uint8array_Nonce)
+      console.log(encrypted,nonce);
+      const body = { encrypted: encrypted, nonce: nonce };
 
-    _data.password = num?.toString() || '';
+      //  Show contents of the encrypted message
+      // LOGIN instead of swap, fetchJson IronSessio
+      try {
+        mutateUser(
+          await fetchJson("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }),
+        );
+      } catch (error) {
+        console.error("Failed attempted login: ", error);
+        setErrorMessage(error.message);
+      }
 
-    update(_data);
-    form.setFieldsValue(_data);
-  }, [dataRef, form, update]);
-
-  const loginFn = useCallback((password: string) => debounce(
-    (password: string) => {
-      // LOGIN instead of swap, fetchJson IronSession w/ Argon2 encryption
-
-      // subscription.current = swap.swap(password).subscribe({
-      //   error: (error: Error) => {
-      //       setErrorMessage('Incorrect Password -- Please try again');
-      //   },
-      //   next: (result) => {
-      //     if (!result.isValid) return;
-      //     setErrorMessage('');
-      //     mutateUser(result.user)
-      //   }
-      // });
-
-    }, 500), []);
-
-  const handleInput = useCallback((data: string) => {
-
-    loginFn(data);
-  }, [loginFn]);
+    };
 
   const handleValueChange = useCallback((changed: Partial<FormData>) => {
     if (changed.password) {
-      if (changed.password.length < 14) return
-      handleInput(changed.password);
+      setPassword(changed.password);
     }
-  }, [handleInput]);
+  }, []);
 
 
   return (
@@ -122,7 +138,7 @@ const Login: NextPage = () => {
 
         </Title>
         <FormItem
-          initialValue={initData.password}
+          initialValue={passwd}
           name='password'
           rules={[{ required: true, message: 'Please Input the App Password!' }]}
         >
@@ -140,7 +156,9 @@ const Login: NextPage = () => {
               </ErrorBtn>
             )
             : (
-              <LoginBtn>
+              <LoginBtn
+                onClick={() => loginFn()}
+              >
                 {'Login'}
               </LoginBtn>
             )

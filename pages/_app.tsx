@@ -1,5 +1,5 @@
 import React from 'react'
-import type { AppProps /*, AppContext */ } from 'next/app'
+import type { AppProps } from 'next/app'
 import { PolkascanProvider } from '../react-environment/PolkascanProvider'
 import '../styles/Home.module.css';
 
