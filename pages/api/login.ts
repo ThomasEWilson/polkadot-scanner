@@ -44,7 +44,8 @@ export default withSession(async (req, res) => {
     res.json(user);
   } catch (error) {
     const { message, status } = error;
-    res.status(status || 500).json({message});
+    // Log Message somewhere awesome.
+    res.status(status || 500).json({ isLoggedIn: false});
   }
 });
 

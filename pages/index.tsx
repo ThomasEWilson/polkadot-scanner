@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import styled from 'styled-components'
 import {Input} from 'antd'
 import Router from 'next/router';
+import { GetStaticProps } from 'next';
 
 import { Button, Card, FlexBox, Form } from '/ui-components'
 import {flexBox, typography} from '/ui-components/utils'
@@ -10,8 +11,7 @@ import { useDataChanger } from '/lib'
 
 import {StoreDispatch } from '/react-environment/state';
 import { useDispatch } from 'react-redux';
-import { setUser } from '/react-environment/state/modules/application/actions';
-import { useUser } from '/react-environment/state/modules/application/hooks';
+import { useUser, useSetUser } from '/react-environment/state/modules/application/hooks';
 
 import { FormItem } from '/ui-components/Form'
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
@@ -62,7 +62,7 @@ interface LoginProps {
 // This function gets called at build time on server-side.
 // It won't be called on client-side, so you can even do
 // direct database queries. See the "Technical details" section.
-export async function getStaticProps() {
+export const getStaticProps: GetStaticProps = (context) => {
   const stringu8a_Secret = process.env.SECRET_u8a;
   const stringu8a_Nonce = process.env.NONCE;
   return {
@@ -76,10 +76,10 @@ export async function getStaticProps() {
 const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
   // Grab User, redirect to scanner if Authorized.
   let isUserAuthenticated = useUser();
+  const setUser = useSetUser();
   const dispatch = useDispatch<StoreDispatch>();
 
   useEffect(() => {
-    dispatch(setUser({ user: isUserAuthenticated }));
     if (isUserAuthenticated) { Router.push('/explorer');}
   }, [dispatch, isUserAuthenticated]);
 
@@ -113,12 +113,12 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
       //  Show contents of the encrypted message
       // LOGIN instead of swap, fetchJson IronSessio
       try {
-        const userResp = await fetchJson("/api/login", {
+        const { isLoggedIn } = await fetchJson("/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
-        isUserAuthenticated = userResp.isLoggedIn
+        setUser(isLoggedIn)
       } catch (error) {
         console.error("Failed attempted login: ", error);
         setErrorMessage(error.message);

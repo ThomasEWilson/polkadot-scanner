@@ -3,13 +3,7 @@
 module.exports = {
   reactStrictMode: true,
     async redirects() {
-    return [
-      {
-        source: '/home',
-        destination: '/explorer',
-        permanent: true,
-      },
-    ]
+    return []
   }
 
   

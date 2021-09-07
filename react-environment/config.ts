@@ -17,7 +17,7 @@ export const sidebarConfig: SidebarConfig = {
     {
       icon: '',
       name: 'Login',
-      path: 'login'
+      path: '/'
     },
     {
       icon: '',
