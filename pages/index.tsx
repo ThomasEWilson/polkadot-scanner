@@ -59,9 +59,7 @@ interface LoginProps {
   stringu8a_Nonce: string;
 }
 
-// This function gets called at build time on server-side.
-// It won't be called on client-side, so you can even do
-// direct database queries. See the "Technical details" section.
+// Called SERVER-SIDE, not client-side! process.env.$VAR is replaced with server logic under the hood. 
 export const getStaticProps: GetStaticProps = (context) => {
   const stringu8a_Secret = process.env.SECRET_u8a;
   const stringu8a_Nonce = process.env.NONCE;

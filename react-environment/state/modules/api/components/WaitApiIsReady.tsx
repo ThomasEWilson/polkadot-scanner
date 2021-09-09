@@ -1,4 +1,4 @@
-import { PageLoading } from '../../../../../ui-components/loading/PageLoading';
+import { PageLoading } from '/ui-components/loading/PageLoading';
 import React, { FC, ReactElement } from 'react';
 
 import { useApi, useApiIsReady } from '../hooks';

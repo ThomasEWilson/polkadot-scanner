@@ -1,20 +1,24 @@
 import React, { FC, InputHTMLAttributes } from 'react';
 import styled from 'styled-components';
+import Image from 'next/image'
 
-// import { SearchIcon } from './icons';
 import { InnerInput } from './Input';
 import { flexBox, getThemeConfig, typography } from './utils';
+
+const searchIconPath = './icons/search.svg'
 
 interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
   value?: any;
   onChange?: (value: any) => void;
 }
 
-export const SearchInput = styled<FC<SearchInputProps>>(({ className, ...other }) => {
+export const SearchInput = styled<FC<SearchInputProps>>(({ className, [providerProps, blockFromProps, blockToProps] }) => {
   return (
     <div className={className}>
       <InnerInput {...other} />
-      {/* <SearchIcon /> */}
+      <InnerInput {...other} />
+      <InnerInput {...other} />
+      <Image src={searchIconPath} alt='Search Icon'/>
     </div>
   );
 })`
