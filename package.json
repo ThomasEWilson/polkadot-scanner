@@ -10,12 +10,8 @@
   },
   "dependencies": {
     "@polkadot/api": "^5.6.1",
-    "@polkadot/jsonrpc": "^1.7.1",
-    "@polkadot/react-components": "^0.39.1",
-    "@polkadot/react-hooks": "^0.39.1",
-    "@polkadot/react-params": "^0.39.1",
-    "@polkadot/react-query": "^0.39.1",
-    "@polkadot/util": "^7.3.1",
+    "@polkadot/api-contract": "5.6.1",
+    "@polkadot/ui-keyring": "^0.85.3",
     "@reduxjs/toolkit": "^1.6.1",
     "antd": "^4.16.12",
     "babel-preset-next": "^1.4.0",
@@ -30,6 +26,7 @@
     "react-dom": "^17.0.0",
     "react-redux": "^7.2.4",
     "reselect": "^4.0.0",
+    "rxjs": "^7.3.0",
     "styled-components": "^5.3.0",
     "swr": "^0.5.6"
   },

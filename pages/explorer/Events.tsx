@@ -4,10 +4,10 @@
 import type { KeyedEvent } from './types';
 
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import styled from 'styled-components';
 
-import { Table } from '@polkadot/react-components';
+// import { Table } from '@polkadot/react-components';
 import { formatNumber } from '@polkadot/util';
 
 import Event from './Event';

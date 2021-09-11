@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 // I can make one up using BestHash.tsx
 // import { useBestNumber } from '@polkadot/react-hooks';
@@ -14,7 +13,8 @@ import BlockByNumber from './ByNumber';
 
 function Entry (): React.ReactElement | null {
   // const bestNumber = useBestNumber();
-  const { value } = useParams<{ value: string }>();
+  const blockIdentifier = '';
+  const value = '';
   const [stateValue, setStateValue] = useState<string | undefined>(value);
 
   // useEffect((): void => {

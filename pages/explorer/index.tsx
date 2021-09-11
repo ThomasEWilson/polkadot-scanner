@@ -3,9 +3,12 @@ import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components'
 import { useUser } from '/react-environment/state/modules/application/hooks';
 import BlockInfo from './block-info';
+import BestHash from './BestHash';
 import Query from './Query'
 
 const CH3 = styled.h3`text-align: center; padding: 20px 5px; color: white; font-size: 10rem;`;
+
+const CBestHash = styled(BestHash)``;
 
 const Explorer: NextPage = ({ }) => {
   // Authorization Required for Scanner Access
@@ -17,7 +20,9 @@ const Explorer: NextPage = ({ }) => {
   // POLKASCANNER Scanner Feature.
   return (
     <>
-      <Query />
+      <CH3>EXPLORER TEST</CH3>
+      <CBestHash/>
+      {/* <Query /> */}
       {/* Will loop over Blocks gathered from query to map out BlockInfo blocks. */}
       {/* Devise new component BlockRangeInfo expanding ByHash:
           Props: from query. 
@@ -34,7 +39,7 @@ const Explorer: NextPage = ({ }) => {
           3. Filter the big table with onFilter(handler).
 
       */}
-      <BlockInfo />
+      {/* <BlockInfo /> */}
     </>
   )
 }

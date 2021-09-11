@@ -1,4 +1,4 @@
-import React, { FC, InputHTMLAttributes } from 'react';
+import React, { FC, InputHTMLAttributes,HTMLAttributes } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image'
 
@@ -11,13 +11,18 @@ interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
   value?: any;
   onChange?: (value: any) => void;
 }
+interface QueryRangeProps extends HTMLAttributes<HTMLDivElement> {
+  providerProps: SearchInputProps;
+  blockFromProps: SearchInputProps;
+  blockToProps: SearchInputProps;
+}
 
-export const SearchInput = styled<FC<SearchInputProps>>(({ className, [providerProps, blockFromProps, blockToProps] }) => {
+export const SearchInput = styled<FC<QueryRangeProps>>(({ className, providerProps, blockFromProps, blockToProps }) => {
   return (
     <div className={className}>
-      <InnerInput {...other} />
-      <InnerInput {...other} />
-      <InnerInput {...other} />
+      <InnerInput {...providerProps} />
+      <InnerInput {...blockFromProps} />
+      <InnerInput {...blockToProps} />
       <Image src={searchIconPath} alt='Search Icon'/>
     </div>
   );

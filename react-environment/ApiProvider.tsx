@@ -17,6 +17,7 @@ export const ApiProvider: FC<BareProps> = ({ children }) => {
   const [api, setApi] = useState<ApiRx>();
   const [connected, setConnected] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
+  // get endpoints from appConfigState
 
   useEffect(() => {
     const wsProvider = new WsProvider(POLKAENDPOINT);

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { ApiRx } from '@polkadot/api';
+import  Api from '@polkadot/api/rx';
 
 import { StoreDispatch, StoreState } from '../..';
 import { setApi, setEndpoints } from './actions';

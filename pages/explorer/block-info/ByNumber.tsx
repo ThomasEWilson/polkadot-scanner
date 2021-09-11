@@ -6,7 +6,7 @@ import type { Hash } from '@polkadot/types/interfaces';
 import React, { useEffect, useState } from 'react';
 
 import { Loading } from '/ui-components/loading/Loading';
-import { useApi, useIsMountedRef } from '@polkadot/react-hooks';
+// import { useApi, useIsMountedRef } from '@polkadot/react-hooks';
 
 import BlockByHash from './ByHash';
 
@@ -17,7 +17,6 @@ interface Props {
 function BlockByNumber ({ value }: Props): React.ReactElement<Props> | null {
   const { api } = useApi();
   const [getBlockHash, setState] = useState<Hash | null>(null);
-  const mountedRef = useIsMountedRef();
   const [error, setError] = useState<Error | null>(null);
 
   useEffect((): void => {

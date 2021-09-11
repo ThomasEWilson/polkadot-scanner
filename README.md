@@ -8,6 +8,9 @@
     "@polkadot/react-query": "^0.39.1",
     "@polkadot/react-signer": "^0.39.1",
     "@polkadot/ui-assets": "^0.85.3",
+    
+    "@polkadot/util": "^7.3.1",
+
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 

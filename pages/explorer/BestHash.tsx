@@ -3,9 +3,12 @@
 
 import type { Header } from '@polkadot/types/interfaces';
 
-import React from 'react';
+import React, {useState} from 'react';
 
-import { useApi, useCall } from '@polkadot/react-hooks';
+// import { useApi, useCall } from '@polkadot/react-hooks';
+// import { useCall } from '/lib/useCall';
+import { useApi } from '/react-environment/state/modules/api/hooks';
+import { switchMap } from 'rxjs';
 
 interface Props {
   className?: string;
@@ -13,12 +16,24 @@ interface Props {
 }
 
 function BestHash ({ className = '', label }: Props): React.ReactElement<Props> {
-  const { api } = useApi();
-  const newHead = useCall<Header>(api.rpc.chain.subscribeNewHeads);
+  const api = useApi()
+  const [newHeader, setHeader] = useState<any>();
+  
+  api.isReady
+     .pipe(
+       switchMap((api) => 
+           api.rpc.chain.subscribeNewHeads()
+       )
+     )
+     .subscribe({
+      next: (h) => setHeader(h),
+      error: (e) => console.error(e),
+      complete: () => console.log('Event: Switching Providers or Losing connection to Node')
+     });
 
   return (
     <div className={className}>
-      {label || ''}{newHead?.hash.toHex()}
+      {label || ''}{newHeader?.hash.toHex()}
     </div>
   );
 }

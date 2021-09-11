@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Event as EventDisplay, Expander } from '@polkadot/react-components';
+import { Event as EventDisplay, Expander } from '/ui-components/polkadot';
 import type { EventRecord } from '@polkadot/types/interfaces';
 
 interface Props {

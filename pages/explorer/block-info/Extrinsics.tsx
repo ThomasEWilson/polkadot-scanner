@@ -6,8 +6,8 @@ import type { BlockNumber, Extrinsic } from '@polkadot/types/interfaces';
 
 import React, { useMemo } from 'react';
 
-import { Table } from '@polkadot/react-components';
-import { useApi } from '@polkadot/react-hooks';
+// import { Table } from '@polkadot/react-components';
+// import { useApi } from '@polkadot/react-hooks';
 
 import ExtrinsicDisplay from './Extrinsic';
 
