@@ -8,10 +8,10 @@ import type { KeyringItemType } from '@polkadot/ui-keyring/types';
 import React from 'react';
 import styled from 'styled-components';
 
-import AccountName from './AccountName';
+import AccountName from '@polkadot/react-components/AccountName';
 import BalanceDisplay from './Balance';
 import BondedDisplay from './Bonded';
-import { toShortAddress } from './util';
+import { toShortAddress } from '@polkadot/react-components/util';
 
 interface Props {
   balance?: BN | BN[];
@@ -54,7 +54,6 @@ function AddressMini ({ balance, bonded, children, className = '', iconInfo, isH
               ? (
                 <AccountName
                   value={value}
-                  withSidebar={withSidebar}
                 >
                   {nameExtra}
                 </AccountName>

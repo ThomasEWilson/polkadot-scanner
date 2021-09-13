@@ -2,30 +2,50 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
-// I can make one up using BestHash.tsx
-// import { useBestNumber } from '@polkadot/react-hooks';
 import { isHex } from '@polkadot/util';
+import { useApi } from '/react-environment/state/modules/api/hooks';
+import useSubscription from '/lib/useSubscription';
+import { switchMap } from 'rxjs';
+
 
 import Query from '../Query';
 import BlockByHash from './ByHash';
 import BlockByNumber from './ByNumber';
+import { BlockNumber } from '@polkadot/types/interfaces';
 
 function Entry (): React.ReactElement | null {
-  // const bestNumber = useBestNumber();
-  const blockIdentifier = '';
-  const value = '';
+  const api = useApi();
+  const { value } = useParams<{ value: string }>();
+  const [bestNumber, setBestNumber] = useState<BlockNumber>();
   const [stateValue, setStateValue] = useState<string | undefined>(value);
 
-  // useEffect((): void => {
-  //   setStateValue((stateValue) =>
-  //     value && value !== stateValue
-  //       ? value
-  //       : !stateValue && bestNumber
-  //         ? bestNumber.toString()
-  //         : stateValue
-  //   );
-  // }, [bestNumber, value]);
+  useSubscription(() =>
+    api.isReady
+      .pipe(
+        switchMap((api) => 
+          api.derive.chain.bestNumber()
+        )
+      )
+      .subscribe({
+        next: (h) => setBestNumber(h),
+        error: (e) => console.error(e),
+        complete: () => console.log('')
+      }
+    ), [api]
+  )
+
+
+  useEffect((): void => {
+    setStateValue((stateValue) =>
+      value && value !== stateValue
+        ? value
+        : !stateValue && bestNumber
+          ? bestNumber.toString()
+          : stateValue
+    );
+  }, [bestNumber, value]);
 
   if (!stateValue) {
     return null;

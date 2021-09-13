@@ -8,11 +8,12 @@ import BN from 'bn.js';
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
 
-import { AddressMini, Call, Expander } from '@polkadot/react-components';
+import { AddressMini, Call, LinkPolkascan } from '@polkadot/react-components';
+import { default as Expander } from '/ui-components/polkadot/Expander';
+
 import { formatNumber } from '@polkadot/util';
 
 import Event from '../Event';
-import LinkExternal from '/ui-components/LinkExternal';
 
 interface Props {
   blockNumber?: BlockNumber;
@@ -29,7 +30,7 @@ function getEra ({ era }: Extrinsic, blockNumber?: BlockNumber): [number, number
   if (blockNumber && era.isMortalEra) {
     const mortalEra = era.asMortalEra;
 
-    return [mortalEra.birth(blockNumber.toNumber()), mortalEra.death(blockNumber.toNumber())];
+    return [mortalEra.birth(blockNumber.toBn().toNumber()), mortalEra.death(blockNumber.toBn().toNumber())];
   }
 
   return null;
@@ -53,7 +54,7 @@ function filterEvents (index: number, events: KeyedEvent[] = [], maxBlockWeight?
   return [
     dispatchInfo,
     dispatchInfo && maxBlockWeight
-      ? dispatchInfo.weight.mul(BN_TEN_THOUSAND).div(maxBlockWeight).toNumber() / 100
+      ? dispatchInfo.weight.toBn().mul(BN_TEN_THOUSAND).div(maxBlockWeight.toBn()).toNumber() / 100
       : 0,
     filtered
   ];
@@ -97,7 +98,7 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
       >
         <Expander
           summary={`${section}.${method}`}
-          // summaryMeta={meta}
+          summaryMeta={meta}
         >
           <Call
             className='details'
@@ -135,7 +136,7 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
             <div className='explorer--BlockByHash-nonce'>
               {'index'} {formatNumber(value.nonce)}
             </div>
-            <LinkExternal
+            <LinkPolkascan
               data={value.hash.toHex()}
               type='extrinsic'
             />

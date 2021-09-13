@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { Event as EventDisplay, Expander } from '/ui-components/polkadot';
+import { default as EventDisplay } from '/ui-components/polkadot/Event'
+import { default as Expander } from '/ui-components/polkadot/Expander';
 import type { EventRecord } from '@polkadot/types/interfaces';
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
       <Expander
         className={className}
         summary={`${event.section}.${event.method}`}
-        // summaryMeta={event.meta}
+        summaryMeta={event.meta}
       >
         <EventDisplay
           className='details'

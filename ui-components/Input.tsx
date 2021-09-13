@@ -33,6 +33,19 @@ export const InnerInput = styled.input`
 
   transition: all 200ms
 `;
+export const InnerSearchInput = styled.input`
+  flex: 1;
+  // clear border
+  border: none !important;
+  appearance: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  background: transparent;
+  line-height: 26px;
+  padding: 5px 24px;
+  transition: all 200ms
+`;
 
 const Prefix = styled.div`
   display: flex;

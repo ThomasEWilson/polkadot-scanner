@@ -33,6 +33,7 @@ export interface InformationProps {
   content: React.ReactNode;
   size?: 'small' | 'normal';
   variant?: string;
+  
 }
 
 export const Information: FC<InformationProps> = ({ content, size = 'normal', title, variant }) => {

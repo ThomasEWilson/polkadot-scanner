@@ -3,32 +3,38 @@
 
 import type { Hash } from '@polkadot/types/interfaces';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Loading } from '/ui-components/loading/Loading';
-// import { useApi, useIsMountedRef } from '@polkadot/react-hooks';
+import { useApi } from '/react-environment/state/modules/api/hooks';
+import { useIsMountedRef, useSubscription } from '/lib'
+import { switchMap } from 'rxjs';
 
 import BlockByHash from './ByHash';
 
 interface Props {
-  value: string;
+  value: any;
 }
 
 function BlockByNumber ({ value }: Props): React.ReactElement<Props> | null {
-  const { api } = useApi();
+  const api = useApi();
+  const mountedRef = useIsMountedRef();
   const [getBlockHash, setState] = useState<Hash | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect((): void => {
-    api.rpc.chain
-      .getBlockHash(value)
-      .then((result): void => {
-        mountedRef.current && setState(result);
-      })
-      .catch((error: Error): void => {
-        mountedRef.current && setError(error);
-      });
-  }, [api, mountedRef, value]);
+  useSubscription(() => 
+     api.isReady
+            .pipe(
+              switchMap((api) => 
+                api.rpc.chain.getBlockHash(value)
+              )
+            )
+        .subscribe({
+          next: (blockHash) => mountedRef && setState(blockHash),
+          error: (e) => setError(e),
+          complete: () => console.log('Event Complete: Switching Providers or Losing connection to Node')
+        }
+  ), [api, mountedRef, value]);
 
   if (!getBlockHash && !error) {
     return <Loading />;

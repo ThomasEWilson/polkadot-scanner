@@ -4,8 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { StoreDispatch, StoreState } from '../../index';
 import { setModalvisible, setTheme, setTitle, setUser } from './actions';
 
-
-
 export const useTitle = () => {
   return useSelector((state: StoreState) => state.application.title);
 };

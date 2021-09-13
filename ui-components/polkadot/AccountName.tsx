@@ -8,13 +8,11 @@ import type { AccountId, AccountIndex, Address } from '@polkadot/types/interface
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-// import { AccountSidebarToggle } from '@polkadot/app-accounts/Sidebar';
-
 // Replace this with createType from /api now
-import registry from '@polkadot/react-api/typeRegistry';
+import registry from '@polkadot/api';
 
 // START HERE, all depends on API: replace with modern stuff from redux
-// import { useApi, useCall } from '@polkadot/react-hooks';
+import { useApi, useCall } from '@polkadot/react-hooks';
 
 import { isFunction, stringToU8a } from '@polkadot/util';
 
@@ -44,16 +42,16 @@ const indexCache = new Map<string, string>();
 
 const parentCache = new Map<string, string>();
 
-export function getParentAccount (value: string): string | undefined {
+export function getParentAccount(value: string): string | undefined {
   return parentCache.get(value);
 }
 
-function defaultOrAddr (defaultName = '', _address: AccountId | AccountIndex | Address | string | Uint8Array, _accountIndex?: AccountIndex | null): [React.ReactNode, boolean, boolean, boolean] {
-  const known = KNOWN.find(([known]) => known.eq(_address));
+function defaultOrAddr(defaultName = '', _address: AccountId | AccountIndex | Address | string | Uint8Array, _accountIndex?: AccountIndex | null): [React.ReactNode, boolean, boolean, boolean] {
+  // const known = KNOWN.find(([known]) => known.eq(_address));
 
-  if (known) {
-    return [known[1], false, false, true];
-  }
+  // if (known) {
+  //   return [known[1], false, false, true];
+  // }
 
   const accountId = _address.toString();
 
@@ -61,7 +59,7 @@ function defaultOrAddr (defaultName = '', _address: AccountId | AccountIndex | A
     return [defaultName, false, false, false];
   }
 
-  const [isAddressExtracted,, extracted] = getAddressName(accountId, null, defaultName);
+  const [isAddressExtracted, , extracted] = getAddressName(accountId, null, defaultName);
   const accountIndex = (_accountIndex || '').toString() || indexCache.get(accountId);
 
   if (isAddressExtracted && accountIndex) {
@@ -73,7 +71,7 @@ function defaultOrAddr (defaultName = '', _address: AccountId | AccountIndex | A
   return [extracted, !isAddressExtracted, isAddressExtracted, false];
 }
 
-function extractName (address: string, accountIndex?: AccountIndex, defaultName?: string): React.ReactNode {
+function extractName(address: string, accountIndex?: AccountIndex, defaultName?: string): React.ReactNode {
   const displayCached = displayCache.get(address);
 
   if (displayCached) {
@@ -96,7 +94,7 @@ function extractName (address: string, accountIndex?: AccountIndex, defaultName?
   );
 }
 
-function createIdElem (nameElem: React.ReactNode, color: 'green' | 'red' | 'gray', icon: IconName): React.ReactNode {
+function createIdElem(nameElem: React.ReactNode, color: 'green' | 'red' | 'gray', icon: IconName): React.ReactNode {
   return (
     <div className='via-identity'>
       <Badge
@@ -109,7 +107,7 @@ function createIdElem (nameElem: React.ReactNode, color: 'green' | 'red' | 'gray
   );
 }
 
-function extractIdentity (address: string, identity: DeriveAccountRegistration): React.ReactNode {
+function extractIdentity(address: string, identity: DeriveAccountRegistration): React.ReactNode {
   const judgements = identity.judgements.filter(([, judgement]) => !judgement.isFeePaid);
   const isGood = judgements.some(([, judgement]) => judgement.isKnownGood || judgement.isReasonable);
   const isBad = judgements.some(([, judgement]) => judgement.isErroneous || judgement.isLowQuality);
@@ -135,11 +133,10 @@ function extractIdentity (address: string, identity: DeriveAccountRegistration):
   return elem;
 }
 
-function AccountName ({ children, className = '', defaultName, label, onClick, override, toggle, value, withSidebar }: Props): React.ReactElement<Props> {
+function AccountName({ children, className = '', defaultName, label, onClick, override, toggle, value, withSidebar }: Props): React.ReactElement<Props> {
   const { api } = useApi();
-  const info = useCall<DeriveAccountInfo>(api.derive.accounts.info, [value]);
+  // const info = useCall<DeriveAccountInfo>(api.derive.accounts.info, [value]);
   const [name, setName] = useState<React.ReactNode>(() => extractName((value || '').toString(), undefined, defaultName));
-  const toggleSidebar = useContext(AccountSidebarToggle);
 
   // set the actual nickname, local name, accountIndex, accountId
   useEffect((): void => {
@@ -168,19 +165,12 @@ function AccountName ({ children, className = '', defaultName, label, onClick, o
     [defaultName, value]
   );
 
-  const _onToggleSidebar = useCallback(
-    () => toggleSidebar && value && toggleSidebar([value.toString(), _onNameEdit]),
-    [_onNameEdit, toggleSidebar, value]
-  );
-
   return (
     <div
       className={`ui--AccountName${withSidebar ? ' withSidebar' : ''} ${className}`}
       data-testid='account-name'
       onClick={
-        withSidebar
-          ? _onToggleSidebar
-          : onClick
+        onClick
       }
     >
       {label || ''}{override || name}{children}

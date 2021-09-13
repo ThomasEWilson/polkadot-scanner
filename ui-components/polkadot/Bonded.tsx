@@ -6,8 +6,7 @@ import type { AccountId, AccountIndex, Address } from '@polkadot/types/interface
 
 import React from 'react';
 
-// TODO Query Step
-// import { Bonded } from '@polkadot/react-query';
+import { Bonded } from '@polkadot/react-query';
 
 import { renderProvided } from './Balance';
 

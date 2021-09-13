@@ -9,12 +9,12 @@ import type { Codec } from '@polkadot/types/types';
 import React, { useMemo } from 'react';
 
 // TODO
-// import { Input } from '@polkadot/react-components';
-// import Params from '@polkadot/react-params';
+import { Input } from '../Input';
+import Params from '@polkadot/react-params';
 import { getTypeDef } from '@polkadot/types';
 
 // import { useTranslation } from './translate';
-import { getContractAbi } from './util';
+import { getContractAbi } from '@polkadot/react-components/util';
 
 export interface Props {
   children?: React.ReactNode;
@@ -75,8 +75,8 @@ function EventDisplay ({ children, className = '', value }: Props): React.ReactE
         {abiEvent && (
           <>
             <Input
-              isDisabled
-              label={t<string>('contract event')}
+              disabled
+              prefix={'contract event'}
               value={abiEvent.event.identifier}
             />
             <Params

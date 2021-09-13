@@ -4,7 +4,7 @@
 import React, { useCallback, useState } from 'react';
 import styled from 'styled-components';
 
-// import { Button, FilterOverlay, Input } from '@polkadot/react-components';
+import { Button, FilterOverlay, Input } from '@polkadot/react-components';
 import { isHex } from '@polkadot/util';
 
 interface Props {
@@ -36,7 +36,7 @@ function Query ({ className = '', value: propsValue }: Props): React.ReactElemen
   const _onQuery = useCallback(
     (): void => {
       if (isValid && value.length !== 0) {
-        window.location.hash = `/explorer/query/${value}`;
+        // window.location.hash = `/explorer/query/${value}`;
       }
     },
     [isValid, value]

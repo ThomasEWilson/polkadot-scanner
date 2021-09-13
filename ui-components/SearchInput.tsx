@@ -2,7 +2,7 @@ import React, { FC, InputHTMLAttributes,HTMLAttributes } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image'
 
-import { InnerInput } from './Input';
+import { InnerSearchInput } from './Input';
 import { flexBox, getThemeConfig, typography } from './utils';
 
 const searchIconPath = './icons/search.svg'
@@ -20,9 +20,9 @@ interface QueryRangeProps extends HTMLAttributes<HTMLDivElement> {
 export const SearchInput = styled<FC<QueryRangeProps>>(({ className, providerProps, blockFromProps, blockToProps }) => {
   return (
     <div className={className}>
-      <InnerInput {...providerProps} />
-      <InnerInput {...blockFromProps} />
-      <InnerInput {...blockToProps} />
+      <InnerSearchInput {...providerProps} />
+      <InnerSearchInput {...blockFromProps} />
+      <InnerSearchInput {...blockToProps} />
       <Image src={searchIconPath} alt='Search Icon'/>
     </div>
   );

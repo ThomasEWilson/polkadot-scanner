@@ -4,7 +4,7 @@
 import type { AnyJson } from '@polkadot/types/types';
 
 import { Abi } from '@polkadot/api-contract';
-// import { api } from '@polkadot/react-api';
+import { api } from '@polkadot/react-api';
 
 import getAddressMeta from './getAddressMeta';
 
@@ -12,7 +12,7 @@ export default function getContractAbi (address: string | null): Abi | null {
   if (!address) {
     return null;
   }
-
+  api.registry.getChainProperties()
   let abi: Abi | undefined;
   const meta = getAddressMeta(address, 'contract');
 

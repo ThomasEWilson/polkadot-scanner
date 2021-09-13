@@ -6,8 +6,7 @@ import type { AccountId, AccountIndex, Address } from '@polkadot/types/interface
 
 import React from 'react';
 
-// TODO Query Step
-// import { Balance, FormatBalance } from '@polkadot/react-query';
+import { Balance, FormatBalance } from '@polkadot/react-query';
 
 import { BN_ZERO } from '@polkadot/util';
 

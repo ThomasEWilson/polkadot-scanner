@@ -25,7 +25,6 @@ function ParentAccount ({ address, className }: ParentAccountProps): React.React
 
       <AccountName
         value={address}
-        withSidebar
       >
       </AccountName>
     </div>

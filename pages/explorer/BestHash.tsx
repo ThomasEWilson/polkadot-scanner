@@ -6,8 +6,8 @@ import type { Header } from '@polkadot/types/interfaces';
 import React, {useState} from 'react';
 
 // import { useApi, useCall } from '@polkadot/react-hooks';
-// import { useCall } from '/lib/useCall';
 import { useApi } from '/react-environment/state/modules/api/hooks';
+import useSubscription from '/lib/useSubscription';
 import { switchMap } from 'rxjs';
 
 interface Props {
@@ -17,19 +17,23 @@ interface Props {
 
 function BestHash ({ className = '', label }: Props): React.ReactElement<Props> {
   const api = useApi()
-  const [newHeader, setHeader] = useState<any>();
+  const [newHeader, setHeader] = useState<Header>();
   
-  api.isReady
-     .pipe(
-       switchMap((api) => 
-           api.rpc.chain.subscribeNewHeads()
-       )
-     )
-     .subscribe({
-      next: (h) => setHeader(h),
-      error: (e) => console.error(e),
-      complete: () => console.log('Event: Switching Providers or Losing connection to Node')
-     });
+  useSubscription(() =>
+    api.isReady
+      .pipe(
+        switchMap((api) => 
+            api.rpc.chain.subscribeNewHeads()
+        )
+      )
+      .subscribe({
+        next: (h) => setHeader(h),
+        error: (e) => console.error(e),
+        complete: () => console.log('Event Complete: Switching Providers or Losing connection to Node')
+      }
+    ), [api]
+  )
+
 
   return (
     <div className={className}>

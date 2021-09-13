@@ -6,9 +6,9 @@ import type { AccountId, Address } from '@polkadot/types/interfaces';
 import React from 'react';
 import styled from 'styled-components';
 
-import AccountName from './AccountName';
+import AccountName from '@polkadot/react-components/AccountName';
 import ParentAccount from './ParentAccount';
-import { toShortAddress } from './util';
+import { toShortAddress } from '@polkadot/react-components/util';
 
 interface Props {
   children?: React.ReactNode;
@@ -41,7 +41,6 @@ function AddressSmall ({ children, className = '', defaultName, onClickName, ove
           override={overrideName}
           toggle={toggle}
           value={value}
-          withSidebar={withSidebar}
         >
           {children}
         </AccountName>

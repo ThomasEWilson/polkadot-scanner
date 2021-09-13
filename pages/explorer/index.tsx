@@ -1,27 +1,27 @@
 import type { NextPage } from 'next'
 import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components'
-import { useUser } from '/react-environment/state/modules/application/hooks';
 import BlockInfo from './block-info';
 import BestHash from './BestHash';
 import Query from './Query'
+import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 
-const CH3 = styled.h3`text-align: center; padding: 20px 5px; color: white; font-size: 10rem;`;
+const CH3 = styled.h3`text-align: center; padding: 20px 5px; color: white;`;
 
 const CBestHash = styled(BestHash)``;
 
 const Explorer: NextPage = ({ }) => {
   // Authorization Required for Scanner Access
-
-  // Requesting User from client, if not present redirect to Login.
-  const isLoggedIn = useUser();
-
-
   // POLKASCANNER Scanner Feature.
+  const setTitle = useSetTitle();
+  useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
+
+
   return (
     <>
       <CH3>EXPLORER TEST</CH3>
       <CBestHash/>
+
       {/* <Query /> */}
       {/* Will loop over Blocks gathered from query to map out BlockInfo blocks. */}
       {/* Devise new component BlockRangeInfo expanding ByHash:
@@ -39,7 +39,7 @@ const Explorer: NextPage = ({ }) => {
           3. Filter the big table with onFilter(handler).
 
       */}
-      {/* <BlockInfo /> */}
+      <BlockInfo />
     </>
   )
 }

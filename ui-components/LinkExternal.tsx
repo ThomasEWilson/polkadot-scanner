@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 import styled from 'styled-components';
 
 // grab the links from appsConfig
-// import { externalLinks } from '@polkadot/apps-config';
-import { useApi } from '@polkadot/react-hooks';
+import { externalLinks } from '@polkadot/apps-config';
+import { useApi } from '/react-environment/state/modules/api/hooks';
 
 
 interface Props {
@@ -59,7 +59,8 @@ function genLinks (systemChain: string, { data, hash, isLogo, isSidebar, type }:
 }
 
 function LinkExternal ({ className = '', data, hash, isLogo, isSidebar, isSmall, type }: Props): React.ReactElement<Props> | null {
-  const { systemChain } = useApi();
+  const api = useApi();
+  const systemChain = api.consts.system.ss58Prefix.toHuman();
   const links = useMemo(
     () => genLinks(systemChain, { data, hash, isLogo, isSidebar, type }),
     [systemChain, data, hash, isLogo, isSidebar, type]
