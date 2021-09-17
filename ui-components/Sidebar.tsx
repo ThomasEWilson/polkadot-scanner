@@ -5,7 +5,7 @@ import { Products } from './Products';
 import { SidebarConfig } from './types';
 import Image from 'next/image'
 
-import polkaLogotype from '../public/polkaLogotypeC.png';
+import polkaLogotype from '/public/polkaLogotypeC.png';
 
 interface SidebarProps {
   showAccount?: boolean;

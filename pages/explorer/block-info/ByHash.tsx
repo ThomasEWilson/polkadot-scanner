@@ -6,15 +6,17 @@ import type { EventRecord, SignedBlock } from '@polkadot/types/interfaces';
 import type { Vec } from '@polkadot/types';
 import type { HeaderExtended } from '@polkadot/api-derive/type/types';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { forkJoin, switchMap } from 'rxjs';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { lastValueFrom } from 'rxjs';
 
-import { AddressSmall, Table, LinkPolkascan } from '@polkadot/react-components';
+import { AddressSmall } from '/ui-components/polkadot';
+import { Table } from '/ui-components';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import { formatNumber } from '@polkadot/util';
 
 import Extrinsics from './Extrinsics';
 import Summary from './Summary';
+import { useIsMountedRef } from '/lib';
 
 interface Props {
   className?: string;
@@ -23,8 +25,6 @@ interface Props {
 }
 
 const EMPTY_HEADER = [['...', 'start', 6]];
-
-
 
 function transformResult([events, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [KeyedEvent[], SignedBlock, HeaderExtended?] {
   return [
@@ -41,26 +41,25 @@ function transformResult([events, getBlock, getHeader]: [Vec<EventRecord>, Signe
 
 function BlockByHash({ className = '', error, value }: Props): React.ReactElement<Props> {
   const api = useApi();
+
+  const mountedRef = useIsMountedRef();
   const [[events, getBlock, getHeader], setState] = useState<[KeyedEvent[]?, SignedBlock?, HeaderExtended?]>([]);
   const [myError, setError] = useState<Error | null | undefined>(error);
 
   useEffect((): void => {
-    value && api.isReady
-      .pipe(
-        switchMap((api) =>
-          forkJoin([
-            api.query.system.events.at(value),
-            api.rpc.chain.getBlock(value),
-            api.derive.chain.getHeader(value)
-          ])
-        )
-      )
-      .subscribe({
-        next: (result) => setState(transformResult(result)),
-        error: (error) => setError(error),
-        complete: () => console.log('Event: Switching Providers or Losing connection to Node')
+    value && Promise
+      .all([
+        lastValueFrom(api.query.system.events.at(value)),
+        lastValueFrom(api.rpc.chain.getBlock(value)),
+        lastValueFrom(api.derive.chain.getHeader(value))
+      ])
+      .then((result): void => {
+        mountedRef.current && setState(transformResult(result));
+      })
+      .catch((error: Error): void => {
+        mountedRef.current && setError(error);
       });
-  }, [api, value]);
+  }, [api, mountedRef, value]);
 
   const header = useMemo(
     () => getHeader
@@ -89,30 +88,29 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
       />
       <Table
       >
-        <Table.Head>
+        <Table.Header>
           {header}
-        </Table.Head>
+        </Table.Header>
         <Table.Body>
           {myError
-            ? <tr><td colSpan={6}>{`Unable to retrieve the specified block details. ${myError.message}`}</td></tr>
+            ? <Table.Row><Table.Cell colSpan={6}>{`Unable to retrieve the specified block details. ${myError.message}`}</Table.Cell></Table.Row>
             : getBlock && getHeader && !getBlock.isEmpty && !getHeader.isEmpty && (
-              <tr>
-                <td className='address'>
+              <Table.Row>
+                <Table.Cell className='address'>
                   {getHeader.author && (
                     <AddressSmall value={getHeader.author} />
                   )}
-                </td>
-                <td className='hash overflow'>{getHeader.hash.toHex()}</td>
-                <td className='hash overflow'>{parentHash}</td>
-                <td className='hash overflow'>{getHeader.extrinsicsRoot.toHex()}</td>
-                <td className='hash overflow'>{getHeader.stateRoot.toHex()}</td>
-                <td className='media--1200'>
-                  <LinkPolkascan
-                    data={value ?? '#'}
-                    type='block'
-                  />
-                </td>
-              </tr>
+                </Table.Cell>
+                <Table.Cell className='hash overflow'>{getHeader.hash.toHex()}</Table.Cell>
+                <Table.Cell className='hash overflow'>{parentHash}</Table.Cell>
+                <Table.Cell className='hash overflow'>{getHeader.extrinsicsRoot.toHex()}</Table.Cell>
+                <Table.Cell className='hash overflow'>{getHeader.stateRoot.toHex()}</Table.Cell>
+                <Table.Cell className='media--1200'>
+                  <a
+                    href={value ?? '#'}
+                  > PolkaScan Block-Link</a> 
+                </Table.Cell>
+              </Table.Row>
             )
           }
         </Table.Body>

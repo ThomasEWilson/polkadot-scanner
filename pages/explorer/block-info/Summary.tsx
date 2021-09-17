@@ -7,10 +7,11 @@ import type { DispatchInfo, SignedBlock, Weight } from '@polkadot/types/interfac
 import BN from 'bn.js';
 import React, { useMemo } from 'react';
 
-import { CardSummary, SummaryBox } from '@polkadot/react-components';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 
-import { FormatBalance } from '@polkadot/react-query';
+import { CardSummary, SummaryBox } from '/ui-components/polkadot';
+import { FormatBalance } from '/ui-components/polkadot';
+
 import { formatNumber } from '@polkadot/util';
 
 
@@ -62,20 +63,6 @@ function Summary ({ events, maxBlockWeight, signedBlock }: Props): React.ReactEl
           </>
         )}
       </section>
-      {maxBlockWeight && (
-        <section>
-          <CardSummary
-            label={'block weight'}
-            progress={{
-              hideValue: true,
-              total: maxBlockWeight,
-              value: weight
-            }}
-          >
-            {formatNumber(weight)}
-          </CardSummary>
-        </section>
-      )}
       <section>
         <CardSummary label={'event count'}>
           {formatNumber(events.length)}

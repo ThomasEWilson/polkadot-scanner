@@ -6,9 +6,9 @@ import type { AccountId, Address } from '@polkadot/types/interfaces';
 import React from 'react';
 import styled from 'styled-components';
 
-import AccountName from '@polkadot/react-components/AccountName';
+import AccountName from '/ui-components/polkadot/AccountName';
 import ParentAccount from './ParentAccount';
-import { toShortAddress } from '@polkadot/react-components/util';
+import { toShortAddress } from '/ui-components/polkadot/util';
 
 interface Props {
   children?: React.ReactNode;

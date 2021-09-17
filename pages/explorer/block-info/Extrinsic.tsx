@@ -8,8 +8,8 @@ import BN from 'bn.js';
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
 
-import { AddressMini, Call, LinkPolkascan } from '@polkadot/react-components';
-import { default as Expander } from '/ui-components/polkadot/Expander';
+import { AddressMini, Expander, Call } from '/ui-components/polkadot';
+import { Table } from '/ui-components';
 
 import { formatNumber } from '@polkadot/util';
 
@@ -88,11 +88,11 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
   );
 
   return (
-    <tr
+    <Table.Row
       className={className}
       key={`extrinsic:${index}`}
     >
-      <td
+      <Table.Cell
         className='top'
         colSpan={2}
       >
@@ -108,8 +108,8 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
             withHash
           />
         </Expander>
-      </td>
-      <td
+      </Table.Cell>
+      <Table.Cell
         className='top media--1000'
         colSpan={2}
       >
@@ -120,30 +120,30 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
             value={record}
           />
         )}
-      </td>
-      <td className='top number media--1400'>
+      </Table.Cell>
+      {/* <Table.Cell className='top number media--1400'>
         {dispatchInfo && (
           <>
             <>{formatNumber(dispatchInfo.weight)}</>
             <div>{weightPercentage.toFixed(2)}%</div>
           </>
         )}
-      </td>
-      <td className='top media--1200'>
+      </Table.Cell> */}
+      <Table.Cell className='top media--1200'>
         {value.isSigned && (
           <>
             <AddressMini value={value.signer} />
             <div className='explorer--BlockByHash-nonce'>
               {'index'} {formatNumber(value.nonce)}
             </div>
-            <LinkPolkascan
-              data={value.hash.toHex()}
+            <a
+              href={`https://polkadot.polkastats.io/extrinsic/${value.hash.toHex()}`}
               type='extrinsic'
             />
           </>
         )}
-      </td>
-    </tr>
+      </Table.Cell>
+    </Table.Row>
   );
 }
 

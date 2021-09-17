@@ -5,7 +5,6 @@ import type { Header } from '@polkadot/types/interfaces';
 
 import React, {useState} from 'react';
 
-// import { useApi, useCall } from '@polkadot/react-hooks';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import useSubscription from '/lib/useSubscription';
 import { switchMap } from 'rxjs';

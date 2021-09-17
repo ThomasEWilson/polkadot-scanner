@@ -40,6 +40,10 @@ export const TableHeader = styled.thead`
 const _Table = styled.table<{ variant?: string }>`
     width: 100%;
 
+    &.params {
+      padding: 12px;
+    }
+
     & ${TableHeader} {
       padding: 0;
       background: transparent;

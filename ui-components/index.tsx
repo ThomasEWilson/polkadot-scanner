@@ -3,7 +3,7 @@
 export { Input as Input } from './Input';
 export { Table as Table } from './Table';
 
-export { Form as Form } from './Form';
+export { Form as Form, FormItem } from './Form';
 export { default as Layout } from './Layout';
 export { Paragraph as Paragraph } from './Paragraph';
 export { ScrollCard as ScrollCard } from './ScrollCard';
@@ -14,6 +14,9 @@ export { Sidebar as Sidebar } from './Sidebar';
 export { SidebarItem as SidebarItem } from './SidebarItem';
 export { flexBox as flexBox } from './utils/flex';
 export { FlexBox as FlexBox } from './Box';
+export { InlineBlockBox as InlineBlockBox } from './Box';
+export { PaddingBox as PaddingBox } from './Box';
+export { SpaceBox as SpaceBox } from './Box';
 
 export { 
     PageContent, 

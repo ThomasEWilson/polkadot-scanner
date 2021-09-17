@@ -1,26 +1,22 @@
 import React, { useMemo, useState, useRef, useCallback, useEffect, FC } from 'react'
-import { Subscription } from 'rxjs';
 import styled from 'styled-components'
-import { Input } from 'antd'
 import Router from 'next/router';
+import Image from 'next/image'
+import { Input } from 'antd'
 import { GetStaticProps } from 'next';
 
-import { Button, Card, FlexBox, Form } from '/ui-components'
+import { FormItem, Button, Card, FlexBox, Form } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
 
+import { fetcher as fetchJson } from '/lib';
 import { useUserAuth } from '/lib';
 
-import { FormItem } from '/ui-components/Form'
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
-import {
-  naclDecrypt,
-  naclEncrypt,
-} from '@polkadot/util-crypto';
-import {
-  stringToU8a,
-  u8aToString
-} from '@polkadot/util';
-import { fetcher as fetchJson } from '/lib';
+import { naclEncrypt } from '@polkadot/util-crypto';
+import { stringToU8a } from '@polkadot/util';
+
+import polkaLogo from '/public/polkaLogoC.png';
+
 
 const CForm = styled(Form)`
   margin-top: 60px;
@@ -31,15 +27,14 @@ const CForm = styled(Form)`
 `;
 
 const LoginBtn = styled(Button)`  
-margin: 32px auto 0 auto;
-padding: 0 40px;
-width: 320px;`
+  margin: 32px auto 0 auto;
+  padding: 0 40px;
+  width: 320px;`
 
 const Title = styled.div`
   ${flexBox('space-between', 'center')};
   ${typography(14, 17, 500, 'gray4')};
-  margin-bottom: 20px;
-`;
+  margin-bottom: 20px;`;
 
 const ErrorBtn = styled(LoginBtn).attrs({ as: Button })``;
 
@@ -47,8 +42,7 @@ const CCard = styled(Card)`
   margin: 36px auto;
   width: 560px;
   padding: 36px 24px;
-  background: linear-gradient(101.18deg, rgba(255, 255, 255, 0) 1.64%, rgba(255, 255, 255, 0.1) 112.71%) no-repeat border-box padding-box, linear-gradient(rgb(34, 34, 34), rgb(34, 34, 34)) padding-box, linear-gradient(50.94deg, rgba(228, 12, 91, 0) 48.71%, rgba(255, 76, 59, 0.6) 94.76%) border-box rgb(34, 34, 34);
-`;
+  background: linear-gradient(101.18deg, rgba(255, 255, 255, 0) 1.64%, rgba(255, 255, 255, 0.1) 112.71%) no-repeat border-box padding-box, linear-gradient(rgb(34, 34, 34), rgb(34, 34, 34)) padding-box, linear-gradient(50.94deg, rgba(228, 12, 91, 0) 48.71%, rgba(255, 76, 59, 0.6) 94.76%) border-box rgb(34, 34, 34);`;
 
 interface FormData { password: string; }
 interface LoginProps {
@@ -81,7 +75,6 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [form] = Form.useForm<FormData>();
-  const subscription = useRef<Subscription>();
   const [passwd, setPassword] = useState('communityFirst');
 
   const stringU8A_to_Uint8Array = (str) => {
@@ -130,12 +123,9 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
       onValuesChange={handleValueChange}
     >
       <CCard variant='gradient-border'>
-        <FlexBox justifyContent='center'>
-          {/* image */}
+        <FlexBox className='login-logo' justifyContent='center'>
+          <Image src={polkaLogo} alt='Polkadot Logo'></Image>
         </FlexBox>
-        <Title>
-
-        </Title>
         <FormItem
           initialValue={passwd}
           name='password'
@@ -143,10 +133,6 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
         >
           <Input.Password />
         </FormItem>
-
-        <Title>
-
-        </Title>
         {
           errorMessage
             ? (

@@ -6,7 +6,8 @@ import type { AccountId, AccountIndex, Address } from '@polkadot/types/interface
 
 import React from 'react';
 
-import { Balance, FormatBalance } from '@polkadot/react-query';
+import BalanceQuery from './query/Balance';
+import FormatBalance from './FormatBalance'
 
 import { BN_ZERO } from '@polkadot/util';
 
@@ -64,7 +65,7 @@ function BalanceDisplay (props: Props): React.ReactElement<Props> | null {
   return balance
     ? <>{renderProvided({ className, label, value: balance })}</>
     : (
-      <Balance
+      <BalanceQuery
         className={`ui--Balance ${className}`}
         label={label}
         params={params}

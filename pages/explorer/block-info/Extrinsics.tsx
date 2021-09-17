@@ -6,7 +6,7 @@ import type { BlockNumber, Extrinsic } from '@polkadot/types/interfaces';
 
 import React, { useMemo } from 'react';
 
-import { Table } from '@polkadot/react-components';
+import { Table } from '/ui-components';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 
 import ExtrinsicDisplay from './Extrinsic';
@@ -21,7 +21,7 @@ interface Props {
 
 function Extrinsics ({ blockNumber, className = '', events, label, value }: Props): React.ReactElement<Props> {
   const api = useApi();
-  
+  api.registry
   const header = useMemo(() => [
     [label || 'extrinsics', 'start', 2],
     ['events', 'start media--1000', 2],
@@ -33,9 +33,9 @@ function Extrinsics ({ blockNumber, className = '', events, label, value }: Prop
     <Table
       className={className}
     >
-      <Table.Head>
+      <Table.Header>
         {header}
-      </Table.Head>
+      </Table.Header>
       <Table.Body>
         {value?.map((extrinsic, index): React.ReactNode =>
           <ExtrinsicDisplay

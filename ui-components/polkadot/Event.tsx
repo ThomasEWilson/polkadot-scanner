@@ -8,13 +8,13 @@ import type { Codec } from '@polkadot/types/types';
 
 import React, { useMemo } from 'react';
 
-// TODO
 import { Input } from '../Input';
-import Params from '@polkadot/react-params';
+import { Params } from '/ui-components/polkadot';
 import { getTypeDef } from '@polkadot/types';
+import { useApi } from '/react-environment/state/modules/api/hooks';
 
-// import { useTranslation } from './translate';
-import { getContractAbi } from '@polkadot/react-components/util';
+
+import { getContractAbi } from '/ui-components/polkadot/util';
 
 export interface Props {
   children?: React.ReactNode;
@@ -31,9 +31,11 @@ interface AbiEvent extends DecodedEvent {
   values: Value[];
 }
 
-function EventDisplay ({ children, className = '', value }: Props): React.ReactElement<Props> {
+function EventDisplay({ children, className = '', value }: Props): React.ReactElement<Props> {
+  const api = useApi();
   const params = value.typeDef.map(({ type }) => ({ type: getTypeDef(type) }));
   const values = value.data.map((value) => ({ isValid: true, value }));
+  const chainProps = api.registry.getChainProperties();
 
   const abiEvent = useMemo(
     (): AbiEvent | null => {
@@ -43,7 +45,7 @@ function EventDisplay ({ children, className = '', value }: Props): React.ReactE
         const [accountId, encoded] = value.data;
 
         try {
-          const abi = getContractAbi(accountId.toString());
+          const abi = getContractAbi(accountId.toString(), chainProps);
 
           if (abi) {
             const decoded = abi.decodeEvent(encoded as Bytes);
@@ -68,7 +70,6 @@ function EventDisplay ({ children, className = '', value }: Props): React.ReactE
     <div className={`ui--Event ${className}`}>
       {children}
       <Params
-        isDisabled
         params={params}
         values={values}
       >
@@ -80,7 +81,6 @@ function EventDisplay ({ children, className = '', value }: Props): React.ReactE
               value={abiEvent.event.identifier}
             />
             <Params
-              isDisabled
               params={abiEvent.event.args}
               values={abiEvent.values}
             />

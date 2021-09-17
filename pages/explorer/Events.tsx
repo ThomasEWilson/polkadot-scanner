@@ -6,7 +6,7 @@ import type { KeyedEvent } from './types';
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
 
-import { Table } from '@polkadot/react-components';
+import { Table } from '/ui-components';
 import { formatNumber } from '@polkadot/util';
 
 import Event from './Event';
@@ -28,16 +28,16 @@ function Events({ className = '', eventClassName, events, label }: Props): React
     <Table
       className={className}
     >
-      <Table.Head>
+      <Table.Header>
         {header}
-      </Table.Head>
+      </Table.Header>
       <Table.Body>
         {events && events.map(({ blockHash, blockNumber, indexes, key, record }): React.ReactNode => (
-          <tr
+          <Table.Row
             className={eventClassName}
             key={key}
           >
-            <td className='overflow'>
+            <Table.Cell className='overflow'>
               <Event value={record} />
               {blockNumber && (
                 <div className='event-link'>
@@ -45,8 +45,8 @@ function Events({ className = '', eventClassName, events, label }: Props): React
                   <span>{formatNumber(blockNumber)}-{indexes[0]}</span>
                 </div>
               )}
-            </td>
-          </tr>
+            </Table.Cell>
+          </Table.Row>
         ))}
       </Table.Body>
     </Table>

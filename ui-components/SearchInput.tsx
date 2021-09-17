@@ -30,10 +30,10 @@ export const SearchInput = styled<FC<QueryRangeProps>>(({ className, providerPro
   ${flexBox('flex-start', 'center')};
 
   background: ${getThemeConfig('gray0')};
-  height: 32px;
+  height: 96px;
   width: 270px;
   border-radius: 16px;
-  padding: 0 20px;
+  padding: 20px;
   ${typography(13, 16, 500)};
 
   & input::placholder {

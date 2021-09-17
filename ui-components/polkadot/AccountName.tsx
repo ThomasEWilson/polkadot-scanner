@@ -8,16 +8,16 @@ import type { AccountId, AccountIndex, Address } from '@polkadot/types/interface
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-// Replace this with createType from /api now
-import registry from '@polkadot/api';
 
 // START HERE, all depends on API: replace with modern stuff from redux
-import { useApi, useCall } from '@polkadot/react-hooks';
+import { useApi } from '/react-environment/state/modules/api/hooks';
 
 import { isFunction, stringToU8a } from '@polkadot/util';
 
 import Badge from './Badge';
 import { getAddressName } from './util';
+import { useIsMountedRef, useSubscription } from '/lib';
+import { switchMap } from 'rxjs';
 
 interface Props {
   children?: React.ReactNode;
@@ -32,10 +32,7 @@ interface Props {
   withSidebar?: boolean;
 }
 
-const KNOWN: [AccountId, string][] = [
-  [registry.createType('AccountId', stringToU8a('modlpy/socie'.padEnd(32, '\0'))), 'Society'],
-  [registry.createType('AccountId', stringToU8a('modlpy/trsry'.padEnd(32, '\0'))), 'Treasury']
-];
+type AccountParam = Props[`value`];
 
 const displayCache = new Map<string, React.ReactNode>();
 const indexCache = new Map<string, string>();
@@ -134,9 +131,25 @@ function extractIdentity(address: string, identity: DeriveAccountRegistration): 
 }
 
 function AccountName({ children, className = '', defaultName, label, onClick, override, toggle, value, withSidebar }: Props): React.ReactElement<Props> {
-  const { api } = useApi();
-  // const info = useCall<DeriveAccountInfo>(api.derive.accounts.info, [value]);
+  const api = useApi();
+  const mountedRef = useIsMountedRef();
+  const [info, setInfo] = useState<DeriveAccountInfo>();
   const [name, setName] = useState<React.ReactNode>(() => extractName((value || '').toString(), undefined, defaultName));
+  
+  useSubscription(() =>
+    api.isReady
+      .pipe(
+        switchMap((api) =>
+          api.derive.accounts.info(value)
+        )
+      )
+      .subscribe({
+        next: (h) => mountedRef && setInfo(h),
+        error: (e) => mountedRef && console.error(e),
+        complete: () => console.log('Event Complete: Switching Providers or Losing connection to Node')
+      }
+      ), [api]
+  )
 
   // set the actual nickname, local name, accountIndex, accountId
   useEffect((): void => {
@@ -167,7 +180,7 @@ function AccountName({ children, className = '', defaultName, label, onClick, ov
 
   return (
     <div
-      className={`ui--AccountName${withSidebar ? ' withSidebar' : ''} ${className}`}
+      className={`ui--AccountName} ${className}`}
       data-testid='account-name'
       onClick={
         onClick
