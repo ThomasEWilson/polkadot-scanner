@@ -1,10 +1,10 @@
 import type { GenericEventData } from '@polkadot/types';
 import type { TypeDef, Codec } from '@polkadot/types/types';
 import React, { useEffect, useState } from 'react';
+import { isArray } from 'lodash'
 import { Table } from '../';
 
 export interface ParamDef {
-  length?: number;
   name?: string;
   type: TypeDef;
 }
@@ -16,20 +16,30 @@ interface Value {
 
 interface Props {
   children?: React.ReactNode;
-  params?: ParamDef[] | null;
-  values?: Value[] | null;
+  params?: ParamDef[] | ParamDef | null;
+  values?: Value[] | Value | null;
 }
 
-function Params ({ params: pParams, values: pValues}: Props): React.ReactElement<Props> | null {
+function Params ({ children, params: pParams, values: pValues}: Props): React.ReactElement<Props> | null {
   const [params, setParams] = useState<ParamDef[]>([]);
   const [values, setValues] = useState<any[]>([]);
 
   useEffect((): void => {
-    pParams && setParams(pParams);
+    if (pParams) {
+      if (!isArray(pParams))
+        setParams([pParams]);
+      else if (isArray(pParams))
+        setParams(pParams);
+    }
   }, [pParams]);
 
   useEffect((): void => {
-    pValues && setValues(pValues);
+    if (pValues) {
+      if (!isArray(pValues))
+        setValues([pValues]);
+      else if (isArray(pValues))
+        setValues(pValues);
+    }
   }, [pValues]);
 
   if (!params.length) {

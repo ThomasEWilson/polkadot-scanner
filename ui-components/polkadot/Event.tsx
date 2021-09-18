@@ -63,7 +63,7 @@ function EventDisplay({ children, className = '', value }: Props): React.ReactEl
 
       return null;
     },
-    [value]
+    [value, chainProps]
   );
 
   return (
