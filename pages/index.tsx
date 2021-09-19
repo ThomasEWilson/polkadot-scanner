@@ -130,6 +130,7 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
           initialValue={passwd}
           name='password'
           rules={[{ required: true, message: 'Please Input the App Password!' }]}
+          
         >
           <Input.Password />
         </FormItem>

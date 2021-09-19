@@ -6,18 +6,18 @@ import type { EventRecord, SignedBlock } from '@polkadot/types/interfaces';
 import type { Vec } from '@polkadot/types';
 import type { HeaderExtended } from '@polkadot/api-derive/type/types';
 
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { lastValueFrom } from 'rxjs';
 
 import { AddressSmall } from '/ui-components/polkadot';
-import { Table, Card } from '/ui-components';
+import { Card } from '/ui-components';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import { formatNumber } from '@polkadot/util';
 
 import Extrinsics from './Extrinsics';
 import Summary from './Summary';
 import { useIsMountedRef } from '/lib';
-import { Col, Row } from 'antd';
+import { Col, Row, Table } from 'antd';
 import styled from 'styled-components';
 
 interface Props {
@@ -26,16 +26,32 @@ interface Props {
   value?: string | null;
 }
 
-const EMPTY_HEADER = [['...', 'start', 6]];
+interface BlockDetailsData {
+  key: number;
+  blocknumber: string;
+  hash: string;
+  parent: string;
+  extrinsics: string;
+  state: string;
+}
+interface BlockDetailsCols {
+  title: string;
+  dataIndex: string;
+  key: string;
+  render?: any;
+}
 
-const TableHeaderCell = styled(Table.Cell)`
-  text-transform: uppercase;
-`;
-const TableCell = styled(Table.Cell)`
-  white-space: pre-wrap;
-  word-wrap: break-word;
-`;
+// const EMPTY_HEADER = [['...', 'start', 6]];
 
+// const TableHeaderCell = styled(Table.Cell)`
+//   text-transform: uppercase;
+// `;
+// const TableCell = styled(Table.Cell)`
+//   white-space: pre-wrap;
+//   word-wrap: break-word;
+// `;
+
+const CTable = styled(Table)``
 
 function transformResult([events, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [KeyedEvent[], SignedBlock, HeaderExtended?] {
   return [
@@ -56,6 +72,8 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
   const mountedRef = useIsMountedRef();
   const [[events, getBlock, getHeader], setState] = useState<[KeyedEvent[]?, SignedBlock?, HeaderExtended?]>([]);
   const [myError, setError] = useState<Error | null | undefined>(error);
+  const [blockDetailData, setBlockDetailData] = useState<any[]>([]);
+  const [blockDetailCols, setBlockDetailCols] = useState<any[]>([]);
 
   useEffect((): void => {
     value && Promise
@@ -76,10 +94,43 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
   const parentHash = getHeader?.parentHash.toHex();
   const hasParent = !getHeader?.parentHash.isEmpty;
 
+  useCallback(() => {
+    // Loop Blocks, form detail Rows. Grabbing 1 row for now until
+    // Format blockNumber here
+    const data = [
+      {
+        key: 0,
+        blocknumber: formatNumber(blockNumber) ?? '...',
+        hash: getHeader?.hash.toHex() ?? '...',
+        parent: parentHash ?? '...',
+        extrinsics: getHeader?.extrinsicsRoot.toHex() ?? '...',
+        state: getHeader?.stateRoot.toHex() ?? '...',
+      }
+    ];
+    setBlockDetailData(data);
+
+    const blockDetailCols = [
+      { title: 'BlockNumber', dataIndex: 'blocknumber', key: 'blocknumber' },
+      { title: 'Address', key: 'address', render: () => {
+          getHeader 
+            ? ( <AddressSmall value={getHeader?.author} /> )
+            : ( <span> {'...'} </span> )
+      }},
+      { title: 'Hash', dataIndex: 'hash', key: 'hash' },
+      { title: 'Parent', dataIndex: 'parent', key: 'parent' },
+      { title: 'Extrinsics', dataIndex: 'extrinsics', key: 'extrinsics' },
+      { title: 'State', dataIndex: 'state', key: 'state' },
+    ];
+    setBlockDetailCols(blockDetailCols)
+
+    
+  }, [getHeader, blockNumber, parentHash])
+
 
   // Going to use expandable row to show table of extrinsics for each block searched.
   // Definitely consider using the professional expander in antd.js
-  //  Definitely create these tables programattivally where possible with antd tables.
+  // Definitely create these tables programattivally where possible with antd tables.
+
   return (
     <Row gutter={[24, 25]}>
 
@@ -104,7 +155,7 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
             {'Block(s) Details'}
           </Card.Header>
           <Card.Content>
-            <Table>
+            {/* <Table>
               <Table.Header>
                 <Table.Row>
                   <TableHeaderCell align='left'>{formatNumber(blockNumber) ?? 0}</TableHeaderCell>
@@ -137,7 +188,9 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
                   )
                 }
               </Table.Body>
-            </Table>
+            </Table> */}
+            {blockDetailCols && blockDetailData.length > 0 ? <CTable columns={blockDetailCols} dataSource={blockDetailData} pagination={false} />
+                                                           : `Unable to retrieve the specified block details. ${myError?.message}`}
           </Card.Content>
         </Card>
       </Col>
