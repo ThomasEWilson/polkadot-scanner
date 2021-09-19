@@ -17,6 +17,13 @@ export const TableRow = styled.tr<{disabled?: boolean}>`
 export const TableCell = styled.td<{ align?: string }>`
   padding: 14px 0;
   text-align: ${({ align }) => align ?? 'right'};
+  vertical-align: middle;
+
+  &.overflow {
+    max-width: 0px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `;
 
 export const TableBody = styled.tbody`

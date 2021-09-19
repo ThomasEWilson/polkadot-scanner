@@ -53,7 +53,7 @@ function Params ({ children, params: pParams, values: pValues}: Props): React.Re
       <Table.Body>
         {params && params.map(({ name, type }, key): React.ReactNode => (
           <Table.Row key={key}>
-            <Table.Cell width='16%'>
+            <Table.Cell>
               {name}
             </Table.Cell>
             <Table.Cell>

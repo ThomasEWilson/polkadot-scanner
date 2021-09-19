@@ -24,6 +24,13 @@ interface Props {
   value: Extrinsic;
 }
 
+
+
+const TableCell = styled(Table.Cell)`
+  white-space: pre-wrap;
+  word-wrap: break-word;
+`;
+
 const BN_TEN_THOUSAND = new BN(10_000);
 
 function getEra ({ era }: Extrinsic, blockNumber?: BlockNumber): [number, number] | null {
@@ -36,7 +43,7 @@ function getEra ({ era }: Extrinsic, blockNumber?: BlockNumber): [number, number
   return null;
 }
 
-function filterEvents (index: number, events: KeyedEvent[] = [], maxBlockWeight?: Weight): [DispatchInfo | undefined, number, KeyedEvent[]] {
+function filterEvents (index: number, events: KeyedEvent[] = []): [DispatchInfo | undefined, KeyedEvent[]] {
   const filtered = events.filter(({ record: { phase } }) =>
     phase.isApplyExtrinsic &&
     phase.asApplyExtrinsic.eq(index)
@@ -53,14 +60,11 @@ function filterEvents (index: number, events: KeyedEvent[] = [], maxBlockWeight?
 
   return [
     dispatchInfo,
-    dispatchInfo && maxBlockWeight
-      ? dispatchInfo.weight.toBn().mul(BN_TEN_THOUSAND).div(maxBlockWeight.toBn()).toNumber() / 100
-      : 0,
     filtered
   ];
 }
 
-function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBlockWeight, value }: Props): React.ReactElement<Props> {
+function ExtrinsicDisplay ({ blockNumber, className = '', events, index, value }: Props): React.ReactElement<Props> {
 
   const { meta, method, section } = useMemo(
     () => value.registry.findMetaCall(value.callIndex),
@@ -82,19 +86,19 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
     [blockNumber, value]
   );
 
-  const [dispatchInfo, weightPercentage, thisEvents] = useMemo(
-    () => filterEvents(index, events, maxBlockWeight),
-    [index, events, maxBlockWeight]
+  const [dispatchInfo, thisEvents] = useMemo(
+    () => filterEvents(index, events),
+    [index, events]
   );
 
   return (
+
     <Table.Row
       className={className}
       key={`extrinsic:${index}`}
     >
-      <Table.Cell
+      <TableCell align='left'
         className='top'
-        colSpan={2}
       >
         <Expander
           summary={`${section}.${method}`}
@@ -108,28 +112,22 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
             withHash
           />
         </Expander>
-      </Table.Cell>
-      <Table.Cell
+      </TableCell>
+
+      <TableCell
         className='top media--1000'
-        colSpan={2}
       >
-        {thisEvents.map(({ key, record }) =>
+        {thisEvents
+        ?.map(({ key, record }) =>
           <Event
             className='explorer--BlockByHash-event'
             key={key}
             value={record}
           />
         )}
-      </Table.Cell>
-      {/* <Table.Cell className='top number media--1400'>
-        {dispatchInfo && (
-          <>
-            <>{formatNumber(dispatchInfo.weight)}</>
-            <div>{weightPercentage.toFixed(2)}%</div>
-          </>
-        )}
-      </Table.Cell> */}
-      <Table.Cell className='top media--1200'>
+      </TableCell>
+
+      <TableCell className='top media--1200'>
         {value.isSigned && (
           <>
             <AddressMini value={value.signer} />
@@ -142,7 +140,7 @@ function ExtrinsicDisplay ({ blockNumber, className = '', events, index, maxBloc
             />
           </>
         )}
-      </Table.Cell>
+      </TableCell>
     </Table.Row>
   );
 }
@@ -165,3 +163,90 @@ export default React.memo(styled(ExtrinsicDisplay)`
     font-weight: var(--font-weight-normal);
   }
 `);
+
+
+/***
+ * 
+ *           <Table.Body>
+            {pools.map((pool, i) => {
+              const share = getPoolShare(pool);
+              const [ratio1, ratio2] = getPoolRatio(pool);
+
+              const closes = pool.status === 'provisioning'
+                ? (expectedBlockTime * (pool as ProvisioningPool).notBefore) -
+                (expectedBlockTime * currentBlock)
+                : 0;
+
+              return ();
+            })}
+          </Table.Body>
+ */
+
+/* 
+  <Row gutter={[24, 25]}>
+  <Col span={24}>
+    <Card variant='gradient-border'>
+      <Card.Header>
+        {'Pool Information'}
+      </Card.Header>
+      <Card.Content>
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <TableHeaderCell align='left'>{'Pool Bootstraps'}</TableHeaderCell>
+              <TableHeaderCell>{'Status'}</TableHeaderCell>
+              <TableHeaderCell>{'Current Ratio'}</TableHeaderCell>
+              <TableHeaderCell>{'Current Position'}</TableHeaderCell>
+              <TableHeaderCell>{'Closes'}</TableHeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {pools.map((pool, i) => {
+              const share = getPoolShare(pool);
+              const [ratio1, ratio2] = getPoolRatio(pool);
+
+              const closes = pool.status === 'provisioning'
+                ? (expectedBlockTime * (pool as ProvisioningPool).notBefore) -
+                (expectedBlockTime * currentBlock)
+                : 0;
+
+              return (<Table.Row key={i}>
+                <TableCell align='left'>{getTokenName(pool.currency1.token)}-{getTokenName(pool.currency2.token)}</TableCell>
+                <TableCell>
+                  <FlexBox alignItems='center'
+                    justifyContent='flex-end'>
+                    <Status className={pool.status}>
+                      {pool.status === 'enabled' ? 'ENABLED' : ''}
+                      {pool.status === 'provisioning' ? 'PROVISIONING' : ''}
+                    </Status>
+                  </FlexBox>
+                </TableCell>
+                <TableCell>
+                  <FormatBalance balance={ratio1}
+                    decimalLength={5}
+                    token={pool.currency1.token} /> : <FormatBalance balance={ratio2}
+                      decimalLength={5}
+                      token={pool.currency2.token} />
+                </TableCell>
+                <TableCell>
+                  <FormatBalance balance={pool.currency1.balance}
+                    decimalLength={5}
+                    token={pool.currency1.token} /> : <FormatBalance balance={pool.currency2.balance}
+                      decimalLength={5}
+                      token={pool.currency2.token} />
+                </TableCell>
+                <TableCell>
+                  {closes
+                    ? dayjs().to(dayjs().add(closes, 'milliseconds'))
+                    : 'Closed'
+                  }
+                </TableCell>
+              </Table.Row>);
+            })}
+          </Table.Body>
+        </Table>
+      </Card.Content>
+    </Card>
+  </Col>
+</Row>
+*/

@@ -6,10 +6,18 @@ import type { BlockNumber, Extrinsic } from '@polkadot/types/interfaces';
 
 import React, { useMemo } from 'react';
 
-import { Table } from '/ui-components';
+import { Table, Card } from '/ui-components';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 
 import ExtrinsicDisplay from './Extrinsic';
+import styled from 'styled-components';
+import { Col, Row } from 'antd';
+
+
+
+const TableHeaderCell = styled(Table.Cell)`
+  text-transform: uppercase;
+`;
 
 interface Props {
   blockNumber?: BlockNumber;
@@ -20,17 +28,47 @@ interface Props {
 }
 
 function Extrinsics ({ blockNumber, className = '', events, label, value }: Props): React.ReactElement<Props> {
+
   const api = useApi();
-  api.registry
-  const header = useMemo(() => [
-    [label || 'extrinsics', 'start', 2],
-    ['events', 'start media--1000', 2],
-    ['weight', 'media--1400'],
-    ['signer', 'address media--1200']
-  ], [label]);
 
   return (
-    <Table
+      <Row gutter={[24, 25]}>
+        <Col span={24}>
+          <Card variant='gradient-border'>
+            <Card.Header>
+              {'Extrinsics'}
+            </Card.Header>
+            <Card.Content>
+              <Table>
+                <Table.Header>
+                  <Table.Row>
+                    <TableHeaderCell align='left'>{'extrinsics'}</TableHeaderCell>
+                    <TableHeaderCell>{'events'}</TableHeaderCell>
+                    <TableHeaderCell>{'signer'}</TableHeaderCell>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                {value?.map((extrinsic, index): React.ReactNode =>
+                  <ExtrinsicDisplay
+                    blockNumber={blockNumber}
+                    events={events}
+                    index={index}
+                    key={`extrinsic:${index}`}
+                    value={extrinsic}
+                  />
+                )}
+                </Table.Body>
+              </Table>
+            </Card.Content>
+          </Card>
+        </Col>
+      </Row>
+  );
+}
+
+export default React.memo(Extrinsics);
+
+    /* <Table
       className={className}
     >
       <Table.Header>
@@ -48,8 +86,4 @@ function Extrinsics ({ blockNumber, className = '', events, label, value }: Prop
           />
         )}
       </Table.Body>
-    </Table>
-  );
-}
-
-export default React.memo(Extrinsics);
+    </Table> */

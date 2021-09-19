@@ -10,13 +10,15 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { lastValueFrom } from 'rxjs';
 
 import { AddressSmall } from '/ui-components/polkadot';
-import { Table } from '/ui-components';
+import { Table, Card } from '/ui-components';
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import { formatNumber } from '@polkadot/util';
 
 import Extrinsics from './Extrinsics';
 import Summary from './Summary';
 import { useIsMountedRef } from '/lib';
+import { Col, Row } from 'antd';
+import styled from 'styled-components';
 
 interface Props {
   className?: string;
@@ -25,6 +27,15 @@ interface Props {
 }
 
 const EMPTY_HEADER = [['...', 'start', 6]];
+
+const TableHeaderCell = styled(Table.Cell)`
+  text-transform: uppercase;
+`;
+const TableCell = styled(Table.Cell)`
+  white-space: pre-wrap;
+  word-wrap: break-word;
+`;
+
 
 function transformResult([events, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [KeyedEvent[], SignedBlock, HeaderExtended?] {
   return [
@@ -61,32 +72,96 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
       });
   }, [api, mountedRef, value]);
 
-  const header = useMemo(
-    () => getHeader
-      ? [
-        [formatNumber(getHeader.number.unwrap()), 'start', 1],
-        [('hash'), 'start'],
-        [('parent'), 'start'],
-        [('extrinsics'), 'start'],
-        [('state'), 'start'],
-        [undefined, 'media--1200']
-      ]
-      : EMPTY_HEADER,
-    [getHeader]
-  );
-
   const blockNumber = getHeader?.number.unwrap();
   const parentHash = getHeader?.parentHash.toHex();
   const hasParent = !getHeader?.parentHash.isEmpty;
 
+
+  // Going to use expandable row to show table of extrinsics for each block searched.
+  // Definitely consider using the professional expander in antd.js
+  //  Definitely create these tables programattivally where possible with antd tables.
   return (
-    <div className={className}>
-      <Summary
-        events={events}
-        maxBlockWeight={api.consts.system.blockWeights.maxBlock}
-        signedBlock={getBlock}
-      />
-      <Table
+    <Row gutter={[24, 25]}>
+
+      <Col span={24}>
+        <Card variant='gradient-border'>
+          <Card.Header>
+            {'Summary'}
+          </Card.Header>
+          <Card.Content>
+            <Summary
+              events={events}
+              maxBlockWeight={api.consts.system.blockWeights?.maxBlock}
+              signedBlock={getBlock}
+            />
+          </Card.Content>
+        </Card>
+      </Col>
+
+      <Col span={24}>
+        <Card variant='gradient-border'>
+          <Card.Header>
+            {'Block(s) Details'}
+          </Card.Header>
+          <Card.Content>
+            <Table>
+              <Table.Header>
+                <Table.Row>
+                  <TableHeaderCell align='left'>{formatNumber(blockNumber) ?? 0}</TableHeaderCell>
+                  <TableHeaderCell>{'hash'}</TableHeaderCell>
+                  <TableHeaderCell>{'parent'}</TableHeaderCell>
+                  <TableHeaderCell>{'extrinsics'}</TableHeaderCell>
+                  <TableHeaderCell>{'state'}</TableHeaderCell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {myError
+                  ? <Table.Row><Table.Cell colSpan={5}>{`Unable to retrieve the specified block details. ${myError.message}`}</Table.Cell></Table.Row>
+                  : getBlock && getHeader && !getBlock.isEmpty && !getHeader.isEmpty && (
+                    <Table.Row>
+                      <Table.Cell className='address'>
+                        {getHeader.author && (
+                          <AddressSmall value={getHeader.author} />
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className='hash overflow'>{getHeader.hash.toHex()}</Table.Cell>
+                      <Table.Cell className='hash overflow'>{parentHash}</Table.Cell>
+                      <Table.Cell className='hash overflow'>{getHeader.extrinsicsRoot.toHex()}</Table.Cell>
+                      <Table.Cell className='hash overflow'>{getHeader.stateRoot.toHex()}</Table.Cell>
+                      <Table.Cell className='media--1200'>
+                        <a
+                          href={value ?? '#'}
+                        >PolkaScan</a> 
+                      </Table.Cell>
+                    </Table.Row>
+                  )
+                }
+              </Table.Body>
+            </Table>
+          </Card.Content>
+        </Card>
+      </Col>
+
+      {getBlock && getHeader && (
+        <Col span={24}>
+          <Extrinsics
+            blockNumber={blockNumber}
+            events={events}
+            value={getBlock.block.extrinsics}
+          />
+        </Col>
+      )}
+      
+    </Row>
+  );
+}
+
+export default React.memo(BlockByHash);
+
+
+/*
+
+       <Table
       >
         <Table.Header>
           {header}
@@ -116,15 +191,71 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
         </Table.Body>
 
       </Table>
-      {getBlock && getHeader && (
-        <Extrinsics
-          blockNumber={blockNumber}
-          events={events}
-          value={getBlock.block.extrinsics}
-        />
-      )}
-    </div>
-  );
-}
+       */
 
-export default React.memo(BlockByHash);
+/*
+
+<Card variant='gradient-border'>
+      <Card.Header>
+        {'Pool Information'}
+      </Card.Header>
+      <Card.Content>
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <TableHeaderCell align='left'>{'Pool Bootstraps'}</TableHeaderCell>
+              <TableHeaderCell>{'Status'}</TableHeaderCell>
+              <TableHeaderCell>{'Current Ratio'}</TableHeaderCell>
+              <TableHeaderCell>{'Current Position'}</TableHeaderCell>
+              <TableHeaderCell>{'Closes'}</TableHeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {pools.map((pool, i) => {
+              const share = getPoolShare(pool);
+              const [ratio1, ratio2] = getPoolRatio(pool);
+
+              const closes = pool.status === 'provisioning'
+                ? (expectedBlockTime * (pool as ProvisioningPool).notBefore) -
+                (expectedBlockTime * currentBlock)
+                : 0;
+
+              return (<Table.Row key={i}>
+                <TableCell align='left'>{getTokenName(pool.currency1.token)}-{getTokenName(pool.currency2.token)}</TableCell>
+                <TableCell>
+                  <FlexBox alignItems='center'
+                    justifyContent='flex-end'>
+                    <Status className={pool.status}>
+                      {pool.status === 'enabled' ? 'ENABLED' : ''}
+                      {pool.status === 'provisioning' ? 'PROVISIONING' : ''}
+                    </Status>
+                  </FlexBox>
+                </TableCell>
+                <TableCell>
+                  <FormatBalance balance={ratio1}
+                    decimalLength={5}
+                    token={pool.currency1.token} /> : <FormatBalance balance={ratio2}
+                      decimalLength={5}
+                      token={pool.currency2.token} />
+                </TableCell>
+                <TableCell>
+                  <FormatBalance balance={pool.currency1.balance}
+                    decimalLength={5}
+                    token={pool.currency1.token} /> : <FormatBalance balance={pool.currency2.balance}
+                      decimalLength={5}
+                      token={pool.currency2.token} />
+                </TableCell>
+                <TableCell>
+                  {closes
+                    ? dayjs().to(dayjs().add(closes, 'milliseconds'))
+                    : 'Closed'
+                  }
+                </TableCell>
+              </Table.Row>);
+            })}
+          </Table.Body>
+        </Table>
+      </Card.Content>
+    </Card>
+*/
+
