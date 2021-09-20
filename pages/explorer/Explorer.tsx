@@ -1,11 +1,13 @@
 import type { NextPage } from 'next'
-import React, { useEffect, useRef, useState, FC } from 'react';
+import React, { useEffect, useRef, useState, FC, useCallback } from 'react';
 import styled from 'styled-components'
 import BlockByNumber from './block-info/ByNumber';
-import BestHash from './BestHash';
+import BestHash from './block-info/BestHash';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
-import { Button, Card, FlexBox, Form } from '/ui-components'
+import { Button, Card, FlexBox, Form, FormItem } from '/ui-components'
+import { Input } from 'antd'
 import { flexBox, typography } from '/ui-components/utils'
+import { useDataChanger } from '/lib';
 
 
 const CForm = styled(Form)`
@@ -36,23 +38,21 @@ interface FormData {
 }
 
 const ExplorerPage: FC = () => {
-  // Authorization Required for Scanner Access
-  // POLKASCANNER Scanner Feature.
   const setTitle = useSetTitle();
   useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
 
+  const currentBestNumber = null;
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [form] = Form.useForm<FormData>();
 
-  const initData: FormData = {
+  const initFormData: FormData = {
     rpcUrl: 'wss://rpc.polkadot.io',
     fromBlockNumber: 6829987,
     toBlockNumber: 6829988  //(default to useBlockNumber, hardcoding for DEV)
   };
 
-  // const { data, dataRef, update } = useDataChanger<FormData>(initData);
-
-  // const requiredFlag = useRef<boolean>(true);
+  const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
+  const requiredFlag = useRef<boolean>(true);
 
   // const outputRules = useNumberRule({
   //   required: () => requiredFlag.current,
@@ -65,19 +65,120 @@ const ExplorerPage: FC = () => {
   //   }
   // });
 
-   
+  const setRPCValue = useCallback((rpcVal?: string) => {
+    const _data = { rpcUrl: dataRef.current.rpcUrl };
 
+    _data.rpcUrl = rpcVal?.toString() || '';
+
+    update(_data);
+    form.setFieldsValue(_data);
+  }, [dataRef, form, update]);
+
+  const setFromBlockValue = useCallback((num?: number) => {
+    const _data = { fromBlockNumber: dataRef.current.fromBlockNumber };
+
+    _data.fromBlockNumber = num || 0;
+
+    update(_data);
+    form.setFieldsValue(_data);
+  }, [dataRef, form, update]);
+
+  const setToBlockValue = useCallback((num?: number) => {
+    const _data = { toBlockNumber: dataRef.current.toBlockNumber };
+
+    _data.toBlockNumber = num || 0;
+
+    update(_data);
+    form.setFieldsValue(_data);
+  }, [dataRef, form, update]);
+
+  const handleValueChange = useCallback((changed: Partial<FormData>) => {
+    if (changed.rpcUrl) {
+        setRPCValue(changed.rpcUrl);
+    }
+    if (changed.fromBlockNumber) {
+        setFromBlockValue(changed.fromBlockNumber);
+    }
+    if (changed.toBlockNumber) {
+        setToBlockValue(changed.toBlockNumber);
+    }
+    update(changed);
+  }, [update, setRPCValue, setFromBlockValue, setToBlockValue]);
+
+  const search = () => {
+      console.log('Searching BITCH')
+      console.log(data);
+  }
+
+     // Initialize Inputs with API Values
+  useEffect(() => {
+    if (!currentBestNumber) return;
+    const _bestNumber = currentBestNumber
+    update({
+      rpcUrl: 'wss://rpc.polkadot.io',
+      fromBlockNumber: _bestNumber - 3,
+      toBlockNumber: _bestNumber
+    });
+
+    form.setFieldsValue({
+      rpcUrl: 'wss://rpc.polkadot.io',
+      fromBlockNumber: _bestNumber - 3,
+      toBlockNumber: _bestNumber
+    });
+  }, [currentBestNumber, update, form]);
 
   return (
     <>
-      {/* <CBestHash/> */}
-      <BlockByNumber
+    <CForm
+      form={form}
+      onValuesChange={handleValueChange}
+    >
+      <CCard variant='gradient-border'>
+        <FlexBox className='login-logo' justifyContent='center'>
+          {/* <Image src={polkaLogo} alt='Polkadot Logo'></Image> */}
+        </FlexBox>
+        <FormItem
+          initialValue={initFormData.rpcUrl}
+          name='rpcUrl'
+          rules={[{ required: true, message: 'Any Polkadot Node RPC' }]}
+        >
+          <Input />
+        </FormItem>
+
+        <FormItem
+          initialValue={initFormData.fromBlockNumber}
+          name='fromBlockNumber'
+          rules={[{ required: true, message: 'Blocknumber required (<= toBlockNumber)' }]}
+        >
+          <Input />
+        </FormItem>
+
+        <FormItem
+          initialValue={initFormData.toBlockNumber}
+          name='toBlockNumber'
+          rules={[{ required: true, message: 'Blocknumber required (>= fromBlockNumber)' }]}
+        >
+          <Input />
+        </FormItem>
+        {/* {!isEmpty(errorMessage) && ( 
+              <ErrorBtn>
+                {errorMessage}
+              </ErrorBtn>
+        )} */}
+        <SearchBtn
+          onClick={() => search()}
+        >
+          {'Search'}
+        </SearchBtn>
+      </CCard>
+    </CForm>
+
+
+      {/* <BlockByNumber
         value={initData.toBlockNumber}
-      />
+      /> */}
       {/* Will loop over Blocks gathered from query to map out BlockInfo blocks. */}
-      {/* Devise new component BlockRangeInfo expanding ByHash:
-          Props: from query. 
-          Ensure Progress Bar silliness goes up and back down.
+      {/* Ensure Progress Bar silliness goes up and back down.
           Build out one large table spanning blocks
           provide filter options: name, by event type.
 
@@ -90,7 +191,6 @@ const ExplorerPage: FC = () => {
           3. Filter the big table with onFilter(handler).
 
       */}
-      {/* <BlockInfo /> */}
     </>
   )
 }

@@ -4,11 +4,12 @@ import Router from 'next/router';
 import Image from 'next/image'
 import { Input } from 'antd'
 import { GetStaticProps } from 'next';
+import { isEmpty } from 'lodash'
 
 import { FormItem, Button, Card, FlexBox, Form } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
 
-import { fetcher as fetchJson } from '/lib';
+import { fetcher as fetchJson, useDataChanger } from '/lib';
 import { useUserAuth } from '/lib';
 
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
@@ -31,12 +32,10 @@ const LoginBtn = styled(Button)`
   padding: 0 40px;
   width: 320px;`
 
-const Title = styled.div`
-  ${flexBox('space-between', 'center')};
-  ${typography(14, 17, 500, 'gray4')};
-  margin-bottom: 20px;`;
 
-const ErrorBtn = styled(LoginBtn).attrs({ as: Button })``;
+const ErrorBtn = styled(LoginBtn).attrs({ as: Button })`
+  opacity: 0.7;
+`;
 
 const CCard = styled(Card)`
   margin: 36px auto;
@@ -62,40 +61,46 @@ export const getStaticProps: GetStaticProps = (context) => {
   }
 }
 
+const envStringU8A_toU8A = (str) => {
+  const u8a = new Uint8Array(str.split(',').map(x => +x));
+  return u8a;
+}
+
 const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
   // Grab User, redirect to scanner if Authorized.
   const { isLoggedIn, mutateUser } = useUserAuth();
-
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  const setTitle = useSetTitle();
+  
+  useEffect(() => setTitle('Login'), [setTitle]);
   useEffect(() => {
     if (isLoggedIn) { Router.push('/explorer'); }
   }, [isLoggedIn]);
-
-  const setTitle = useSetTitle();
-  useEffect(() => setTitle('Login'), [setTitle]);
-
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  
   const [form] = Form.useForm<FormData>();
-  const [passwd, setPassword] = useState('communityFirst');
+  const initFormData: FormData = { password: '' };
+  const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
+  
+  const setPasswordValue = useCallback((pass?: string) => {
+    const _data = { password: dataRef.current.password };
 
-  const stringU8A_to_Uint8Array = (str) => {
-    const u8a = new Uint8Array(str.split(',').map(x => +x));
-    return u8a;
-  }
+    _data.password = pass?.toString() || '';
+
+    update(_data);
+    form.setFieldsValue(_data);
+  }, [dataRef, form, update]);
 
   async function loginFn() {
 
-    const uint8array_Secret = stringU8A_to_Uint8Array(stringu8a_Secret);
-    const uint8array_Nonce = stringU8A_to_Uint8Array(stringu8a_Nonce);
+    const uint8array_Secret = envStringU8A_toU8A(stringu8a_Secret);
+    const uint8array_Nonce = envStringU8A_toU8A(stringu8a_Nonce);
 
-    const passwordPreEncryption = stringToU8a(passwd);
-    // console.log(passwordPreEncryption);
-    // Encrypt the message
+    const passwordPreEncryption = stringToU8a(data.password);
+    // Encrypt the password.
     const { encrypted, nonce } = naclEncrypt(passwordPreEncryption, uint8array_Secret, uint8array_Nonce)
-    console.log(encrypted, nonce);
     const body = { encrypted: encrypted, nonce: nonce };
 
-    //  Show contents of the encrypted message
-    // LOGIN instead of swap, fetchJson IronSessio
     try {
       const { isLoggedIn } = await fetchJson("/api/login", {
         method: "POST",
@@ -105,17 +110,18 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
       mutateUser(isLoggedIn)
     } catch (error: any) {
       console.error("Failed attempted login: ", error);
-      setErrorMessage(error.message);
+      setErrorMessage('Invalid Password. Please try again.');
+      setTimeout(() => setErrorMessage(''), 9000)
     }
 
   };
 
   const handleValueChange = useCallback((changed: Partial<FormData>) => {
     if (changed.password) {
-      setPassword(changed.password);
+      setPasswordValue(changed.password);
     }
-  }, []);
-
+    update(changed);
+  }, [update, setPasswordValue]);
 
   return (
     <CForm
@@ -127,28 +133,22 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
           <Image src={polkaLogo} alt='Polkadot Logo'></Image>
         </FlexBox>
         <FormItem
-          initialValue={passwd}
+          initialValue={initFormData.password}
           name='password'
           rules={[{ required: true, message: 'Please Input the App Password!' }]}
-          
         >
           <Input.Password />
         </FormItem>
-        {
-          errorMessage
-            ? (
+        {!isEmpty(errorMessage) && ( 
               <ErrorBtn>
                 {errorMessage}
               </ErrorBtn>
-            )
-            : (
-              <LoginBtn
-                onClick={() => loginFn()}
-              >
-                {'Login'}
-              </LoginBtn>
-            )
-        }
+        )}
+        <LoginBtn
+          onClick={() => loginFn()}
+        >
+          {'Login'}
+        </LoginBtn>
       </CCard>
     </CForm>
   );

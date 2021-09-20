@@ -13,7 +13,7 @@ import { Table } from '/ui-components';
 
 import { formatNumber } from '@polkadot/util';
 
-import Event from '../Event';
+import Event from './Event';
 
 interface Props {
   blockNumber?: BlockNumber;

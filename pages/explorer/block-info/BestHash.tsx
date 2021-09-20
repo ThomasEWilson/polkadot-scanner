@@ -36,7 +36,7 @@ function BestHash ({ className = '', label }: Props): React.ReactElement<Props> 
 
   return (
     <div className={className}>
-      {label || ''}{newHeader?.hash.toHex()}
+      {newHeader?.hash.toHex()}
     </div>
   );
 }
