@@ -5,7 +5,7 @@ import { useApi } from '/react-environment/state/modules/api/hooks';
 import { useSubscription } from '/lib'
 import { switchMap } from 'rxjs';
 
-export function useBestNumber(): BlockNumber | undefined {
+export default function useBestNumber(): BlockNumber | undefined {
     const api = useApi();
     const [bestBlockNumber, setBestBlockNumber] = useState<BlockNumber>();
 

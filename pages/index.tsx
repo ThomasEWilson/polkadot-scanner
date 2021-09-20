@@ -140,7 +140,9 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
           <Input.Password />
         </FormItem>
         {!isEmpty(errorMessage) && ( 
-              <ErrorBtn>
+              <ErrorBtn
+                disabled
+              >
                 {errorMessage}
               </ErrorBtn>
         )}

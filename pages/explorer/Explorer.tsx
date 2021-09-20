@@ -1,13 +1,16 @@
 import type { NextPage } from 'next'
 import React, { useEffect, useRef, useState, FC, useCallback } from 'react';
 import styled from 'styled-components'
+
 import BlockByNumber from './block-info/ByNumber';
-import BestHash from './block-info/BestHash';
+
+import { useIdleTimer } from 'react-idle-timer'
+import { useDataChanger, useBestNumber } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
-import { Button, Card, FlexBox, Form, FormItem } from '/ui-components'
-import { Input } from 'antd'
+import { Button, Card, FlexBox, Form, FormItem, Input } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
-import { useDataChanger } from '/lib';
+
+// import { Input } from 'antd'
 
 
 const CForm = styled(Form)`
@@ -31,6 +34,12 @@ const CCard = styled(Card)`
   padding: 36px 24px;
   background: linear-gradient(101.18deg, rgba(255, 255, 255, 0) 1.64%, rgba(255, 255, 255, 0.1) 112.71%) no-repeat border-box padding-box, linear-gradient(rgb(34, 34, 34), rgb(34, 34, 34)) padding-box, linear-gradient(50.94deg, rgba(228, 12, 91, 0) 48.71%, rgba(255, 76, 59, 0.6) 94.76%) border-box rgb(34, 34, 34);`;
 
+const CFormItem = styled(FormItem)`
+    margin: 0.5rem 0;`
+
+const CPrefix = styled.span`
+  font-weight: 500
+`
 interface FormData { 
   rpcUrl?: string; 
   fromBlockNumber: number;
@@ -41,9 +50,10 @@ const ExplorerPage: FC = () => {
   const setTitle = useSetTitle();
   useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
 
-  const currentBestNumber = null;
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [form] = Form.useForm<FormData>();
+  const currentBestNumber = useBestNumber();
+  const [hasBestNumberInit, setBestNumberInit] = useState<boolean>(false);
 
   const initFormData: FormData = {
     rpcUrl: 'wss://rpc.polkadot.io',
@@ -105,27 +115,46 @@ const ExplorerPage: FC = () => {
     update(changed);
   }, [update, setRPCValue, setFromBlockValue, setToBlockValue]);
 
+//   Action on search
   const search = () => {
       console.log('Searching BITCH')
       console.log(data);
   }
 
+  const handleOnIdle = event => {
+    console.log('user is idle', event)
+    idleRef.current = true;
+  }
+
+  const handleOnActive = event => {
+    console.log('user is active', event)
+    idleRef.current = false;
+  }
+
+  const { isIdle } = useIdleTimer({
+    timeout: 1000 * 10,
+    onIdle: handleOnIdle,
+    onActive: handleOnActive,
+  })
+  const idleRef = useRef<boolean>(isIdle());
+
      // Initialize Inputs with API Values
   useEffect(() => {
-    if (!currentBestNumber) return;
-    const _bestNumber = currentBestNumber
-    update({
-      rpcUrl: 'wss://rpc.polkadot.io',
-      fromBlockNumber: _bestNumber - 3,
-      toBlockNumber: _bestNumber
-    });
-
-    form.setFieldsValue({
-      rpcUrl: 'wss://rpc.polkadot.io',
-      fromBlockNumber: _bestNumber - 3,
-      toBlockNumber: _bestNumber
-    });
-  }, [currentBestNumber, update, form]);
+    if ( !currentBestNumber ) return;
+    if ( idleRef.current || !hasBestNumberInit) {
+        const _bestNumber = currentBestNumber.toNumber()
+        update({
+          fromBlockNumber: _bestNumber - 1,
+          toBlockNumber: _bestNumber
+        });
+    
+        form.setFieldsValue({
+          fromBlockNumber: _bestNumber - 1,
+          toBlockNumber: _bestNumber
+        });
+        if ( !hasBestNumberInit ) setBestNumberInit(true);
+    }
+  }, [currentBestNumber, hasBestNumberInit, idleRef, update, form]);
 
   return (
     <>
@@ -137,31 +166,39 @@ const ExplorerPage: FC = () => {
         <FlexBox className='login-logo' justifyContent='center'>
           {/* <Image src={polkaLogo} alt='Polkadot Logo'></Image> */}
         </FlexBox>
-        <FormItem
+        <CFormItem
           initialValue={initFormData.rpcUrl}
           name='rpcUrl'
           rules={[{ required: true, message: 'Any Polkadot Node RPC' }]}
         >
-          <Input />
-        </FormItem>
+          <Input 
+            prefix={(<CPrefix>RPC URL:</CPrefix>)}
+          />
+        </CFormItem>
 
-        <FormItem
+        <CFormItem
           initialValue={initFormData.fromBlockNumber}
           name='fromBlockNumber'
           rules={[{ required: true, message: 'Blocknumber required (<= toBlockNumber)' }]}
         >
-          <Input />
-        </FormItem>
+          <Input 
+            prefix={(<CPrefix>Blocknumber (FROM):</CPrefix>)}
+          />
+        </CFormItem>
 
-        <FormItem
+        <CFormItem
           initialValue={initFormData.toBlockNumber}
           name='toBlockNumber'
           rules={[{ required: true, message: 'Blocknumber required (>= fromBlockNumber)' }]}
         >
-          <Input />
-        </FormItem>
+          <Input 
+            prefix={(<CPrefix>Blocknumber (TO):</CPrefix>)}
+          />
+        </CFormItem>
         {/* {!isEmpty(errorMessage) && ( 
-              <ErrorBtn>
+              <ErrorBtn
+                disabled
+              >
                 {errorMessage}
               </ErrorBtn>
         )} */}
