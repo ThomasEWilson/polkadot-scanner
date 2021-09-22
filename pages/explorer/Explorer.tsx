@@ -5,13 +5,10 @@ import styled from 'styled-components'
 import BlockByNumber from './block-info/ByNumber';
 
 import { useIdleTimer } from 'react-idle-timer'
-import { useDataChanger, useBestNumber } from '/lib';
+import { useDataChanger, useBestNumber, useNumberRule, useRPCRule } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 import { Button, Card, FlexBox, Form, FormItem, Input } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
-
-// import { Input } from 'antd'
-
 
 const CForm = styled(Form)`
   margin-top: 60px;
@@ -46,6 +43,7 @@ interface FormData {
   toBlockNumber?: number;
 }
 
+
 const ExplorerPage: FC = () => {
   const setTitle = useSetTitle();
   useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
@@ -58,22 +56,30 @@ const ExplorerPage: FC = () => {
   const initFormData: FormData = {
     rpcUrl: 'wss://rpc.polkadot.io',
     fromBlockNumber: 6829987,
-    toBlockNumber: 6829988  //(default to useBlockNumber, hardcoding for DEV)
+    toBlockNumber: 6829988 
   };
 
   const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
   const requiredFlag = useRef<boolean>(true);
 
-  // const outputRules = useNumberRule({
-  //   required: () => requiredFlag.current,
-  //   transferCheck: {
-  //     account: current,
-  //     amount: new FixedPointNumber(data.output?.amount || 0, (data.output?.token as any as Token).decimal),
-  //     currency: data?.output?.token,
-  //     direction: 'to',
-  //     message: 'The account balance will be too low and removed. Read more on Existential Deposit.'
-  //   }
-  // });
+  const toBlockRules = useNumberRule({
+    required: () => requiredFlag.current,
+    min: 0,
+    minMessage: 'Must be greater than fromBlockNumber',
+    max: currentBestNumber?.toNumber() ?? initFormData.toBlockNumber ?? 6829988,
+    maxMessage: 'Must be lessthan or equal (<=) current Block Number'
+  });
+  const fromBlockRules = useNumberRule({
+    required: () => requiredFlag.current,
+    min: 0,
+    minMessage: 'Must be greater than zero',
+    max: currentBestNumber?.toNumber() ?? initFormData.toBlockNumber ?? 6829988,
+    maxMessage: 'Must be less than (<) BlockNumber (TO) - 1'
+  });
+
+  const rpcRules = useRPCRule({
+    required: () => requiredFlag.current
+  });
 
   const setRPCValue = useCallback((rpcVal?: string) => {
     const _data = { rpcUrl: dataRef.current.rpcUrl };
@@ -117,7 +123,7 @@ const ExplorerPage: FC = () => {
 
 //   Action on search
   const search = () => {
-      console.log('Searching BITCH')
+      console.log('Searching, friends. Searching')
       console.log(data);
   }
 
@@ -132,7 +138,7 @@ const ExplorerPage: FC = () => {
   }
 
   const { isIdle } = useIdleTimer({
-    timeout: 1000 * 10,
+    timeout: 1000 * 20,
     onIdle: handleOnIdle,
     onActive: handleOnActive,
   })
@@ -163,13 +169,10 @@ const ExplorerPage: FC = () => {
       onValuesChange={handleValueChange}
     >
       <CCard variant='gradient-border'>
-        <FlexBox className='login-logo' justifyContent='center'>
-          {/* <Image src={polkaLogo} alt='Polkadot Logo'></Image> */}
-        </FlexBox>
         <CFormItem
           initialValue={initFormData.rpcUrl}
           name='rpcUrl'
-          rules={[{ required: true, message: 'Any Polkadot Node RPC' }]}
+          rules={rpcRules}
         >
           <Input 
             prefix={(<CPrefix>RPC URL:</CPrefix>)}
@@ -179,7 +182,8 @@ const ExplorerPage: FC = () => {
         <CFormItem
           initialValue={initFormData.fromBlockNumber}
           name='fromBlockNumber'
-          rules={[{ required: true, message: 'Blocknumber required (<= toBlockNumber)' }]}
+          rules={fromBlockRules}
+          // rules={[{ required: true, message: 'Blocknumber required (<= toBlockNumber)' }]}
         >
           <Input 
             prefix={(<CPrefix>Blocknumber (FROM):</CPrefix>)}
@@ -189,7 +193,8 @@ const ExplorerPage: FC = () => {
         <CFormItem
           initialValue={initFormData.toBlockNumber}
           name='toBlockNumber'
-          rules={[{ required: true, message: 'Blocknumber required (>= fromBlockNumber)' }]}
+          rules={toBlockRules}
+          // rules={[{ required: true, message: 'Blocknumber required (>= fromBlockNumber)' }]}
         >
           <Input 
             prefix={(<CPrefix>Blocknumber (TO):</CPrefix>)}

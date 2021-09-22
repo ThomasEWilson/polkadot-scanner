@@ -33,6 +33,9 @@ function BestHash ({ className = '', label }: Props): React.ReactElement<Props> 
     ), [api]
   )
 
+  // if (newHeader)
+  // newHeader.number.unwrap().subn(500)
+
 
   return (
     <div className={className}>

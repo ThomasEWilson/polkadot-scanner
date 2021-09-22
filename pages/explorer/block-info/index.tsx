@@ -9,7 +9,7 @@ import useSubscription from '/lib/useSubscription';
 import { switchMap } from 'rxjs';
 
 
-import BlockByNumber from './ByNumber';
+import BlockByNumberRange from './ByNumber';
 import { BlockNumber } from '@polkadot/types/interfaces';
 
 function Entry (): React.ReactElement | null {
@@ -36,9 +36,13 @@ function Entry (): React.ReactElement | null {
   return (
     <>
       {/* <Query /> */}
-      <BlockByNumber
-        value={bestNumber ?? undefined}
-      />
+      {bestNumber && 
+        <BlockByNumberRange
+          from={bestNumber}
+          to={bestNumber}
+        />
+      }
+
     </>
   );
 }

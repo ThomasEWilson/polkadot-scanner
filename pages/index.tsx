@@ -15,6 +15,8 @@ import { useUserAuth } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 import { naclEncrypt } from '@polkadot/util-crypto';
 import { stringToU8a } from '@polkadot/util';
+import { getThemeConfig } from 'ui-components/utils';
+
 
 import polkaLogo from '/public/polkaLogoC.png';
 
@@ -25,6 +27,34 @@ const CForm = styled(Form)`
   & .ant-form-item {
     margin-bottom: 0;
   }
+`;
+
+const CInput = styled(Input.Password)`
+display: flex;
+align-items: center;
+padding: 0 24px;
+height: ${({ size }) => size === 'large' ? 58 : 32}px;
+background: ${getThemeConfig('gray1')};
+border: 1px solid ${getThemeConfig('gray1')};
+transition: all .2s cubic-bezier(0.0, 0, 0.2, 1);
+border-radius: 8px;
+background: transparent !important;
+
+
+input {
+  background: transparent !important;
+  outline: none;
+  box-shadow: none;
+  color: ${getThemeConfig('primary', 'text')}
+}
+
+${'.ant-form-item-has-error'} & {
+  border-color: ${getThemeConfig('error2')};
+}
+
+&.focused {
+  border-color: ${getThemeConfig('blue1')};
+}
 `;
 
 const LoginBtn = styled(Button)`  
@@ -137,7 +167,7 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
           name='password'
           rules={[{ required: true, message: 'Please Input the App Password!' }]}
         >
-          <Input.Password />
+          <CInput/>
         </FormItem>
         {!isEmpty(errorMessage) && ( 
               <ErrorBtn

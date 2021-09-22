@@ -8,6 +8,7 @@ import styled from 'styled-components';
 
 import LabelHelp from './LabelHelp';
 import { useToggle } from '/lib';
+import { Collapse } from 'antd';
 
 import Icon from './Icon';
 
@@ -32,17 +33,17 @@ export interface Props {
   withHidden?: boolean;
 }
 
-function splitSingle (value: string[], sep: string): string[] {
+const splitSingle = (value: string[], sep: string): string[] => {
   return value.reduce((result: string[], value: string): string[] => {
     return value.split(sep).reduce((result: string[], value: string) => result.concat(value), result);
   }, []);
 }
 
-function splitParts (value: string): string[] {
+const splitParts = (value: string): string[] => {
   return ['[', ']'].reduce((result: string[], sep) => splitSingle(result, sep), [value]);
 }
 
-function formatMeta (meta?: Meta): React.ReactNode | null {
+const formatMeta = (meta?: Meta): React.ReactNode | null => {
   if (!meta || !meta.docs.length) {
     return null;
   }
@@ -59,7 +60,9 @@ function formatMeta (meta?: Meta): React.ReactNode | null {
   return <>{parts.map((part, index) => index % 2 ? <em key={index}>[{part}]</em> : <span key={index}>{part}</span>)}&nbsp;</>;
 }
 
-function Expander ({ children, className = '', help, helpIcon, isOpen, isPadded, onClick, renderChildren, summary, summaryHead, summaryMeta, summarySub, withBreaks, withHidden }: Props): React.ReactElement<Props> {
+const { Panel } = Collapse;
+
+const Expander = ({ children, className = '', help, helpIcon, isOpen, isPadded, onClick, renderChildren, summary, summaryHead, summaryMeta, summarySub, withBreaks, withHidden }: Props): React.ReactElement<Props> => {
 
   const [isExpanded, toggleExpanded] = useToggle(isOpen, onClick);
 
@@ -68,13 +71,13 @@ function Expander ({ children, className = '', help, helpIcon, isOpen, isPadded,
     [isExpanded, renderChildren]
   );
 
-  const headerMain = useMemo(
-    () => summary || formatMeta(summaryMeta),
+  const CHeaderMain = useMemo(
+    () => summary || formatMeta(summaryMeta) || <>{'Details'}</>,
     [summary, summaryMeta]
   );
 
   const headerSub = useMemo(
-    () => summary ? (formatMeta(summaryMeta) || summarySub) : null,
+    () => summary ? (formatMeta(summaryMeta) || summarySub) : <>{' '}</>,
     [summary, summaryMeta, summarySub]
   );
 
@@ -83,38 +86,19 @@ function Expander ({ children, className = '', help, helpIcon, isOpen, isPadded,
     [children, renderChildren]
   );
 
+
   return (
-    <div className={`ui--Expander${isExpanded ? ' isExpanded' : ''}${isPadded ? ' isPadded' : ''}${hasContent ? ' hasContent' : ''}${withBreaks ? ' withBreaks' : ''} ${className}`}>
-      <div
-        className='ui--Expander-summary'
-        onClick={toggleExpanded}
+    <>
+      <Collapse
+        bordered={false}
       >
-        <div className='ui--Expander-summary-header'>
-          {help && (
-            <LabelHelp
-              help={help}
-              icon={helpIcon}
-            />
-          )}
-          {summaryHead}
-          {headerMain || 'Details'}
-          {headerSub && (
-            <div className='ui--Expander-summary-header-sub'>{headerSub}</div>
-          )}
-        </div>
-        <Icon
-          color={hasContent ? undefined : 'transparent'}
-          icon={
-            isExpanded
-              ? 'caret-up'
-              : 'caret-down'
-          }
-        />
-      </div>
-      {hasContent && (isExpanded || withHidden) && (
-        <div className='ui--Expander-content'>{children || demandChildren}</div>
-      )}
-    </div>
+        <Panel header={CHeaderMain} key="1" extra={headerSub}>
+          {hasContent && 
+            (<div className='ui--Expander-content'>{children || demandChildren}</div>)}
+        </Panel>
+      
+      </Collapse>
+    </>
   );
 }
 
@@ -123,30 +107,12 @@ export default React.memo(styled(Expander)`
   overflow: hidden;
   text-overflow: ellipsis;
 
-  &:not(.isExpanded) .ui--Expander-content {
-    display: none;
-  }
-
   &.isExpanded .ui--Expander-content {
     margin-top: 0.5rem;
 
     .body.column {
       justify-content: end;
     }
-  }
-
-  &.hasContent .ui--Expander-summary {
-    cursor: pointer;
-  }
-
-  &.isPadded {
-    .ui--Expander-summary {
-      margin-left: 2.25rem;
-    }
-  }
-
-  &.withBreaks .ui--Expander-content {
-    white-space: normal;
   }
 
   .ui--Expander-summary {

@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { KeyedEvent } from '../types';
-import type { EventRecord, SignedBlock } from '@polkadot/types/interfaces';
+import type { EventRecord, SignedBlock, Hash } from '@polkadot/types/interfaces';
 import type { Vec } from '@polkadot/types';
 import type { HeaderExtended } from '@polkadot/api-derive/type/types';
 
-import React, { useEffect, useCallback, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { lastValueFrom } from 'rxjs';
 
 import { AddressSmall } from '/ui-components/polkadot';
@@ -53,14 +53,39 @@ interface BlockDetailsCols {
 
 const CTable = styled(Table)``
 
-function transformResult([events, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [KeyedEvent[], SignedBlock, HeaderExtended?] {
+
+// function transformResult([mapBlockEventsByHash, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [ KeyedEvent[], SignedBlock, HeaderExtended?] {
+//   return [
+//     events.map(
+//       (record, index) => ({
+//         indexes: [index],
+//         key: `${Date.now()}-${index}-${record.hash.toHex()}`,
+//         record
+//       })),
+//     getBlock,
+//     getHeader
+//   ];
+// }
+
+interface BlockEventsByHash {
+  hash: Hash,
+  events: KeyedEvent[]
+}
+
+function transformRangeResults([mapBlockEventsByHash, getBlock, getHeader]: [[Hash, Vec<EventRecord>][], SignedBlock, HeaderExtended?]): [BlockEventsByHash[], SignedBlock, HeaderExtended?] {
+  const blockEventsByHash = mapBlockEventsByHash.map(
+                    ([hash, events], index: number) => ({
+                        hash: hash,
+                        events: events.map((record, idx) => ({
+                            blockHash: hash.toString(),
+                            indexes: [idx],
+                            key: `${Date.now()}-${idx}-${record.hash.toHex()}`,
+                            record
+                          })) as KeyedEvent[]
+                    }));
+
   return [
-    events.map(
-      (record, index) => ({
-        indexes: [index],
-        key: `${Date.now()}-${index}-${record.hash.toHex()}`,
-        record
-      })),
+    blockEventsByHash,
     getBlock,
     getHeader
   ];
@@ -78,12 +103,13 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
   useEffect((): void => {
     value && Promise
       .all([
-        lastValueFrom(api.query.system.events.at(value)),
+        lastValueFrom(api.query.system.events.range([value, value])),
         lastValueFrom(api.rpc.chain.getBlock(value)),
         lastValueFrom(api.derive.chain.getHeader(value))
       ])
       .then((result): void => {
-        mountedRef.current && setState(transformResult(result));
+          result
+        // mountedRef.current && setState(transformResult(result));
       })
       .catch((error: Error): void => {
         mountedRef.current && setError(error);
@@ -94,7 +120,7 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
   const parentHash = getHeader?.parentHash.toHex();
   const hasParent = !getHeader?.parentHash.isEmpty;
 
-  useCallback(() => {
+  useEffect(() => {
     // Loop Blocks, form detail Rows. Grabbing 1 row for now until
     // Format blockNumber here
     const data = [
@@ -137,21 +163,6 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
       <Col span={24}>
         <Card variant='gradient-border'>
           <Card.Header>
-            {'Summary'}
-          </Card.Header>
-          <Card.Content>
-            <Summary
-              events={events}
-              maxBlockWeight={api.consts.system.blockWeights?.maxBlock}
-              signedBlock={getBlock}
-            />
-          </Card.Content>
-        </Card>
-      </Col>
-
-      <Col span={24}>
-        <Card variant='gradient-border'>
-          <Card.Header>
             {'Block(s) Details'}
           </Card.Header>
           <Card.Content>
@@ -189,7 +200,7 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
                 }
               </Table.Body>
             </Table> */}
-            {blockDetailCols && blockDetailData.length > 0 ? <CTable columns={blockDetailCols} dataSource={blockDetailData} pagination={false} />
+            {blockDetailCols && blockDetailData.length ? <CTable columns={blockDetailCols} dataSource={blockDetailData} pagination={false} />
                                                            : `Unable to retrieve the specified block details. ${myError?.message}`}
           </Card.Content>
         </Card>
