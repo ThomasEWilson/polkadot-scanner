@@ -2,7 +2,7 @@ import type { NextPage } from 'next'
 import React, { useEffect, useRef, useState, FC, useCallback } from 'react';
 import styled from 'styled-components'
 
-import BlockByNumber from './block-info/ByNumber';
+import BlockByNumberRange from './block-info/ByNumber';
 
 import { useIdleTimer } from 'react-idle-timer'
 import { useDataChanger, useBestNumber, useNumberRule, useRPCRule } from '/lib';

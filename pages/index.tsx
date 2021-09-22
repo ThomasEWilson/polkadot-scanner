@@ -22,8 +22,6 @@ import polkaLogo from '/public/polkaLogoC.png';
 
 
 const CForm = styled(Form)`
-  margin-top: 60px;
-
   & .ant-form-item {
     margin-bottom: 0;
   }

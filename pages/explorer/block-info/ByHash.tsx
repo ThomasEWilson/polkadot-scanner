@@ -23,7 +23,8 @@ import styled from 'styled-components';
 interface Props {
   className?: string;
   error?: Error | null;
-  value?: string | null;
+  from?: string | Hash | null;
+  to?: string | Hash | null;
 }
 
 interface BlockDetailsData {
@@ -91,7 +92,7 @@ function transformRangeResults([mapBlockEventsByHash, getBlock, getHeader]: [[Ha
   ];
 }
 
-function BlockByHash({ className = '', error, value }: Props): React.ReactElement<Props> {
+function BlockByHash({ className = '', error, from, to }: Props): React.ReactElement<Props> {
   const api = useApi();
 
   const mountedRef = useIsMountedRef();
@@ -99,13 +100,13 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
   const [myError, setError] = useState<Error | null | undefined>(error);
   const [blockDetailData, setBlockDetailData] = useState<any[]>([]);
   const [blockDetailCols, setBlockDetailCols] = useState<any[]>([]);
+  const hashRange = 
 
   useEffect((): void => {
-    value && Promise
+    from && to && Promise
       .all([
-        lastValueFrom(api.query.system.events.range([value, value])),
-        lastValueFrom(api.rpc.chain.getBlock(value)),
-        lastValueFrom(api.derive.chain.getHeader(value))
+        lastValueFrom(api.query.system.events.range([from, to])),
+        // lastValueFrom(api.derive.chain.getHeader(value))
       ])
       .then((result): void => {
           result
@@ -114,7 +115,7 @@ function BlockByHash({ className = '', error, value }: Props): React.ReactElemen
       .catch((error: Error): void => {
         mountedRef.current && setError(error);
       });
-  }, [api, mountedRef, value]);
+  }, [api, mountedRef, from, to]);
 
   const blockNumber = getHeader?.number.unwrap();
   const parentHash = getHeader?.parentHash.toHex();
