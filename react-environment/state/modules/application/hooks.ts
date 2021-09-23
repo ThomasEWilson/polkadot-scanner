@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { StoreDispatch, StoreState } from '../../index';
-import { setModalvisible, setTheme, setTitle, setUser } from './actions';
+import { setModalvisible, setTheme, setTitle, setUser, setLoadingStatus } from './actions';
 
 export const useTitle = () => {
   return useSelector((state: StoreState) => state.application.title);
@@ -13,6 +13,18 @@ export const useSetTitle = () => {
 
   return useCallback((title: string) => {
     dispatch(setTitle({ title }));
+  }, [dispatch]);
+};
+
+export const useLoadingStatus = () => {
+  return useSelector((state: StoreState) => state.application.loadingStatus);
+};
+
+export const useSetLoadingStatus = () => {
+  const dispatch = useDispatch<StoreDispatch>();
+
+  return useCallback((loadingStatus: string) => {
+    dispatch(setLoadingStatus({ loadingStatus }));
   }, [dispatch]);
 };
 

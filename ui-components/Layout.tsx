@@ -36,13 +36,8 @@ export default function Layout({ children, sidebar }: Props) {
                     <PageTitle.Content>
                       {title}
                     </PageTitle.Content>
-                    <FlexBox columnGap={8}>
-                      {/* <isLoggedButton /> */}
-                    </FlexBox>
                   </PageTitle>
                   {children}
-                  {/* <FlexiFeeModal /> PERHAPS USE Modal for Login page for simplicity, keep single page.*/}
-                  {/* <EventsWatcher /> */}
                 </>
               );
             }}

@@ -9,7 +9,7 @@ import useSubscription from '/lib/useSubscription';
 import { switchMap } from 'rxjs';
 
 
-import BlockByNumberRange from './ByNumber';
+import BlockByNumberRange from './ByNumberRange';
 import { BlockNumber } from '@polkadot/types/interfaces';
 
 function Entry (): React.ReactElement | null {

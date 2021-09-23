@@ -2,13 +2,14 @@ import type { NextPage } from 'next'
 import React, { useEffect, useRef, useState, FC, useCallback } from 'react';
 import styled from 'styled-components'
 
-import BlockByNumberRange from './block-info/ByNumber';
+import BlockByNumberRange, { notNullUndefined } from './block-info/ByNumberRange';
 
 import { useIdleTimer } from 'react-idle-timer'
 import { useDataChanger, useBestNumber, useNumberRule, useRPCRule } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 import { Button, Card, FlexBox, Form, FormItem, Input } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
+import { isEmpty, isNumber } from 'lodash';
 
 const CForm = styled(Form)`
   margin-top: 60px;
@@ -52,7 +53,10 @@ const ExplorerPage: FC = () => {
   const [form] = Form.useForm<FormData>();
   const currentBestNumber = useBestNumber();
   const [hasBestNumberInit, setBestNumberInit] = useState<boolean>(false);
+  const [isSearching, setSearching] = useState<boolean>(false)
+  const [searchParams, setSearchParams] = useState<[number, number] | null>(null);
 
+  
   const initFormData: FormData = {
     rpcUrl: 'wss://rpc.polkadot.io',
     fromBlockNumber: 6829987,
@@ -62,19 +66,21 @@ const ExplorerPage: FC = () => {
   const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
   const requiredFlag = useRef<boolean>(true);
 
-  const toBlockRules = useNumberRule({
-    required: () => requiredFlag.current,
-    min: 0,
-    minMessage: 'Must be greater than fromBlockNumber',
-    max: currentBestNumber?.toNumber() ?? initFormData.toBlockNumber ?? 6829988,
-    maxMessage: 'Must be lessthan or equal (<=) current Block Number'
-  });
   const fromBlockRules = useNumberRule({
     required: () => requiredFlag.current,
+    requiredMessage: `Blocknumber required (+int <= toBlockNumber)`,
     min: 0,
     minMessage: 'Must be greater than zero',
-    max: currentBestNumber?.toNumber() ?? initFormData.toBlockNumber ?? 6829988,
+    max: dataRef?.current?.toBlockNumber ?? currentBestNumber?.toNumber() ?? 6829988,
     maxMessage: 'Must be less than (<) BlockNumber (TO) - 1'
+  });
+  const toBlockRules = useNumberRule({
+    required: () => requiredFlag.current,
+    requiredMessage: `Blocknumber required (+int >= fromBlockNumber)`,
+    min: dataRef?.current?.fromBlockNumber ?? 0,
+    minMessage: 'Must be greater than fromBlockNumber',
+    max: currentBestNumber?.toNumber() ?? 6829988,
+    maxMessage: 'Must be lessthan or equal (<=) current Block Number'
   });
 
   const rpcRules = useRPCRule({
@@ -121,10 +127,31 @@ const ExplorerPage: FC = () => {
     update(changed);
   }, [update, setRPCValue, setFromBlockValue, setToBlockValue]);
 
-//   Action on search
-  const search = () => {
-      console.log('Searching, friends. Searching')
-      console.log(data);
+  const handlePreCheck = useCallback(async () => {
+    try {
+      await form.validateFields();
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }, [form]);
+
+  //   Action on search
+  const search = async () => {
+      if (await handlePreCheck()
+            && isNumber(data.fromBlockNumber) && isNumber(data.toBlockNumber)) {
+        setErrorMessage(``);
+        setSearching(true);
+        setSearchParams([data.fromBlockNumber, data.toBlockNumber]);
+      } else
+          setErrorMessage(`Search struggles.. - kindly \nuse positive integers or simply go idle for defaults.`);
+
+  }
+
+  const reset = () => {
+    setSearchParams(null);
+    setSearching(false);
+    setErrorMessage(``);
   }
 
   const handleOnIdle = event => {
@@ -183,7 +210,6 @@ const ExplorerPage: FC = () => {
           initialValue={initFormData.fromBlockNumber}
           name='fromBlockNumber'
           rules={fromBlockRules}
-          // rules={[{ required: true, message: 'Blocknumber required (<= toBlockNumber)' }]}
         >
           <Input 
             prefix={(<CPrefix>Blocknumber (FROM):</CPrefix>)}
@@ -194,45 +220,32 @@ const ExplorerPage: FC = () => {
           initialValue={initFormData.toBlockNumber}
           name='toBlockNumber'
           rules={toBlockRules}
-          // rules={[{ required: true, message: 'Blocknumber required (>= fromBlockNumber)' }]}
         >
           <Input 
             prefix={(<CPrefix>Blocknumber (TO):</CPrefix>)}
           />
         </CFormItem>
-        {/* {!isEmpty(errorMessage) && ( 
+        {!isEmpty(errorMessage) && ( 
               <ErrorBtn
                 disabled
               >
                 {errorMessage}
               </ErrorBtn>
-        )} */}
+        )}
         <SearchBtn
           onClick={() => search()}
         >
           {'Search'}
+          
         </SearchBtn>
       </CCard>
     </CForm>
-
-
-      {/* <BlockByNumber
-        value={initData.toBlockNumber}
-      /> */}
-      {/* Will loop over Blocks gathered from query to map out BlockInfo blocks. */}
-      {/* Ensure Progress Bar silliness goes up and back down.
-          Build out one large table spanning blocks
-          provide filter options: name, by event type.
-
-          BlockRangeInfo expand ByHash
-          1. Modify ByHash to BlockRange Extrinsics in a single table, IDed by blockNumber.
-           - Ignore SystemEvents,Logs,Justifications
-          2. Loop over gathered blocks:
-           - Modify Extrinsics to return Rows for the BlockRangeExtrinsics
-             - make a table, map Extrinsics sets into them.
-          3. Filter the big table with onFilter(handler).
-
-      */}
+        { isSearching && searchParams &&
+              <BlockByNumberRange
+                from={searchParams?.[0]}
+                to={searchParams?.[1]}
+              />
+        }
     </>
   )
 }

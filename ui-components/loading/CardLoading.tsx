@@ -3,13 +3,15 @@ import styled from 'styled-components';
 
 import { Loading } from './Loading';
 
-export const CardLoading = styled(({ className, height }) => {
+export const CardLoading = styled(({ className, height, status }) => {
   return (
     <div
       className={className}
       style={{ height }}
     >
-      <Loading/>
+      <Loading 
+        status={status}
+      />
     </div>
   );
 })`

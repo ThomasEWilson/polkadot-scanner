@@ -5,5 +5,6 @@ export interface ApplicationState {
     title: string;
     subscanBaseUrl: string;
     user: boolean;
+    loadingStatus: string;
 }
 

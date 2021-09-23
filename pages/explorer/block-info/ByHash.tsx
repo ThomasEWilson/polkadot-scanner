@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { KeyedEvent } from '../types';
-import type { EventRecord, SignedBlock, Hash } from '@polkadot/types/interfaces';
+import type { EventRecord, SignedBlock, Hash, BlockNumber } from '@polkadot/types/interfaces';
 import type { Vec } from '@polkadot/types';
 import type { HeaderExtended } from '@polkadot/api-derive/type/types';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 
 import { AddressSmall } from '/ui-components/polkadot';
 import { Card } from '/ui-components';
@@ -16,9 +16,10 @@ import { formatNumber } from '@polkadot/util';
 
 import Extrinsics from './Extrinsics';
 import Summary from './Summary';
-import { useIsMountedRef } from '/lib';
+import { useBlockHashRange, useIsMountedRef } from '/lib';
 import { Col, Row, Table } from 'antd';
 import styled from 'styled-components';
+import { CardLoading } from '/ui-components/loading/CardLoading';
 
 interface Props {
   className?: string;
@@ -55,7 +56,7 @@ interface BlockDetailsCols {
 const CTable = styled(Table)``
 
 
-// function transformResult([mapBlockEventsByHash, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [ KeyedEvent[], SignedBlock, HeaderExtended?] {
+// function transformResult([events, getBlock, getHeader]: [Vec<EventRecord>, SignedBlock, HeaderExtended?]): [ KeyedEvent[], SignedBlock, HeaderExtended?] {
 //   return [
 //     events.map(
 //       (record, index) => ({
@@ -71,78 +72,85 @@ const CTable = styled(Table)``
 interface BlockEventsByHash {
   hash: Hash,
   events: KeyedEvent[]
+  signedBlock?: SignedBlock
 }
 
-function transformRangeResults([mapBlockEventsByHash, getBlock, getHeader]: [[Hash, Vec<EventRecord>][], SignedBlock, HeaderExtended?]): [BlockEventsByHash[], SignedBlock, HeaderExtended?] {
+function transformRangeResults(mapBlockEventsByHash: [Hash, Vec<EventRecord>][]): BlockEventsByHash[] {
   const blockEventsByHash = mapBlockEventsByHash.map(
-                    ([hash, events], index: number) => ({
-                        hash: hash,
-                        events: events.map((record, idx) => ({
-                            blockHash: hash.toString(),
-                            indexes: [idx],
-                            key: `${Date.now()}-${idx}-${record.hash.toHex()}`,
-                            record
-                          })) as KeyedEvent[]
-                    }));
+    ([hash, events], index: number) => ({
+      hash: hash,
+      events: events.map((record, idx) => ({
+        blockHash: hash.toString(),
+        indexes: [idx],
+        key: `${Date.now()}-${idx}-${record.hash.toHex()}`,
+        record
+      })) as KeyedEvent[]
+    }));
 
-  return [
-    blockEventsByHash,
-    getBlock,
-    getHeader
-  ];
+  return blockEventsByHash;
 }
 
 function BlockByHash({ className = '', error, from, to }: Props): React.ReactElement<Props> {
   const api = useApi();
 
+  const blockHashRange = useBlockHashRange(from, to);
   const mountedRef = useIsMountedRef();
-  const [[events, getBlock, getHeader], setState] = useState<[KeyedEvent[]?, SignedBlock?, HeaderExtended?]>([]);
+  const [blockEventsByHash, setBlockEventsByHash] = useState<BlockEventsByHash[] | null>([]);
+  const [blocks, setBlocks] = useState<SignedBlock[]>();
   const [myError, setError] = useState<Error | null | undefined>(error);
+  // Setting up mad awesome table here.
   const [blockDetailData, setBlockDetailData] = useState<any[]>([]);
   const [blockDetailCols, setBlockDetailCols] = useState<any[]>([]);
-  const hashRange = 
 
   useEffect((): void => {
     from && to && Promise
       .all([
-        lastValueFrom(api.query.system.events.range([from, to])),
-        // lastValueFrom(api.derive.chain.getHeader(value))
+        lastValueFrom(api.query.system.events.range([from, to]))
       ])
-      .then((result): void => {
-          result
-        // mountedRef.current && setState(transformResult(result));
+      .then(([result]): void => {
+        mountedRef.current && setBlockEventsByHash(transformRangeResults(result));
       })
       .catch((error: Error): void => {
         mountedRef.current && setError(error);
       });
   }, [api, mountedRef, from, to]);
 
-  const blockNumber = getHeader?.number.unwrap();
-  const parentHash = getHeader?.parentHash.toHex();
-  const hasParent = !getHeader?.parentHash.isEmpty;
+  // Grab blocks after we get BlockHashRange
+  useEffect((): void => {
+    let calls = [] as Promise<SignedBlock>[];
+    if (blockHashRange) {
+      for (const hash of blockHashRange) {
+        calls.push(
+          lastValueFrom(api.rpc.chain.getBlock(hash)));
+      }
+    }
+    (calls?.length > 0) && Promise
+      .all([...calls])
+      .then((result): void => {
+        mountedRef.current && setBlocks(result);
+      })
+      .catch((error: Error): void => {
+        mountedRef.current && setError(error);
+      });
+  }, [api, mountedRef, blockHashRange]);
 
   useEffect(() => {
-    // Loop Blocks, form detail Rows. Grabbing 1 row for now until
-    // Format blockNumber here
+
+    // SO YOU have BLOCKS and EVENTS on the range, eh? Well time to map them to Cols and Data 
     const data = [
       {
         key: 0,
-        blocknumber: formatNumber(blockNumber) ?? '...',
-        hash: getHeader?.hash.toHex() ?? '...',
-        parent: parentHash ?? '...',
-        extrinsics: getHeader?.extrinsicsRoot.toHex() ?? '...',
-        state: getHeader?.stateRoot.toHex() ?? '...',
       }
     ];
     setBlockDetailData(data);
 
     const blockDetailCols = [
       { title: 'BlockNumber', dataIndex: 'blocknumber', key: 'blocknumber' },
-      { title: 'Address', key: 'address', render: () => {
-          getHeader 
-            ? ( <AddressSmall value={getHeader?.author} /> )
-            : ( <span> {'...'} </span> )
-      }},
+      // { title: 'Address', key: 'address', render: () => {
+      //     getHeader 
+      //       ? ( <AddressSmall value={getHeader?.author} /> )
+      //       : ( <span> {'...'} </span> )
+      // }},
       { title: 'Hash', dataIndex: 'hash', key: 'hash' },
       { title: 'Parent', dataIndex: 'parent', key: 'parent' },
       { title: 'Extrinsics', dataIndex: 'extrinsics', key: 'extrinsics' },
@@ -150,8 +158,8 @@ function BlockByHash({ className = '', error, from, to }: Props): React.ReactEle
     ];
     setBlockDetailCols(blockDetailCols)
 
-    
-  }, [getHeader, blockNumber, parentHash])
+
+  }, [blockEventsByHash, blocks])
 
 
   // Going to use expandable row to show table of extrinsics for each block searched.
@@ -167,47 +175,13 @@ function BlockByHash({ className = '', error, from, to }: Props): React.ReactEle
             {'Block(s) Details'}
           </Card.Header>
           <Card.Content>
-            {/* <Table>
-              <Table.Header>
-                <Table.Row>
-                  <TableHeaderCell align='left'>{formatNumber(blockNumber) ?? 0}</TableHeaderCell>
-                  <TableHeaderCell>{'hash'}</TableHeaderCell>
-                  <TableHeaderCell>{'parent'}</TableHeaderCell>
-                  <TableHeaderCell>{'extrinsics'}</TableHeaderCell>
-                  <TableHeaderCell>{'state'}</TableHeaderCell>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {myError
-                  ? <Table.Row><Table.Cell colSpan={5}>{`Unable to retrieve the specified block details. ${myError.message}`}</Table.Cell></Table.Row>
-                  : getBlock && getHeader && !getBlock.isEmpty && !getHeader.isEmpty && (
-                    <Table.Row>
-                      <Table.Cell className='address'>
-                        {getHeader.author && (
-                          <AddressSmall value={getHeader.author} />
-                        )}
-                      </Table.Cell>
-                      <Table.Cell className='hash overflow'>{getHeader.hash.toHex()}</Table.Cell>
-                      <Table.Cell className='hash overflow'>{parentHash}</Table.Cell>
-                      <Table.Cell className='hash overflow'>{getHeader.extrinsicsRoot.toHex()}</Table.Cell>
-                      <Table.Cell className='hash overflow'>{getHeader.stateRoot.toHex()}</Table.Cell>
-                      <Table.Cell className='media--1200'>
-                        <a
-                          href={value ?? '#'}
-                        >PolkaScan</a> 
-                      </Table.Cell>
-                    </Table.Row>
-                  )
-                }
-              </Table.Body>
-            </Table> */}
-            {blockDetailCols && blockDetailData.length ? <CTable columns={blockDetailCols} dataSource={blockDetailData} pagination={false} />
-                                                           : `Unable to retrieve the specified block details. ${myError?.message}`}
+            {false && blockDetailCols && blockDetailData.length ? <CTable columns={blockDetailCols} dataSource={blockDetailData} pagination={false} />
+              : <CardLoading />}
           </Card.Content>
         </Card>
       </Col>
 
-      {getBlock && getHeader && (
+      {/* {getBlock && getHeader && (
         <Col span={24}>
           <Extrinsics
             blockNumber={blockNumber}
@@ -215,8 +189,8 @@ function BlockByHash({ className = '', error, from, to }: Props): React.ReactEle
             value={getBlock.block.extrinsics}
           />
         </Col>
-      )}
-      
+      )} */}
+
     </Row>
   );
 }
@@ -248,7 +222,7 @@ export default React.memo(BlockByHash);
                 <Table.Cell className='media--1200'>
                   <a
                     href={value ?? '#'}
-                  > PolkaScan Block-Link</a> 
+                  > PolkaScan Block-Link</a>
                 </Table.Cell>
               </Table.Row>
             )

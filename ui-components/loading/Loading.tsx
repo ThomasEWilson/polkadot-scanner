@@ -1,11 +1,16 @@
-import React, { FC, memo } from 'react';
+import { Col, Row } from 'antd';
+import { isString } from 'lodash';
+import React, { FC, memo, useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { BareProps } from '../types'
+import { useLoadingStatus, useSetLoadingStatus } from '/react-environment/state/modules/application/hooks';
 
 
 interface LoadingProps extends BareProps {
   width?: number;
   size?: string;
+  status?: string;
+  progress?: number;
 }
 
 const ringAnimation = keyframes`
@@ -60,18 +65,40 @@ const LoadingRoot = styled.div<{ width: number, size?: string }>`
   }
 `;
 
-export const Loading: FC<LoadingProps> = memo(({ className, size, width }) => {
+export const Loading: FC<LoadingProps> = memo(({ className, size, width, status, progress }) => {
+  
+  const loadingStatus = useLoadingStatus();
+  const setStatus = useSetLoadingStatus();
+  
+  useEffect(() => {
+    if (status && isString(status) && setStatus) { 
+      setStatus(status);
+    }
+  }, [setStatus, status]);
+
   return (
-    <LoadingRoot
-      className={className}
-      size={size}
-      width={width ?? 4}
+    <>
+    <Row 
+      justify='end'
     >
-      <div />
-      <div />
-      <div />
-      <div />
-    </LoadingRoot>
+      <Col
+      >
+        <h3>Status: ${loadingStatus}</h3>
+        <LoadingRoot
+          className={className}
+          size={size}
+          width={width ?? 4}
+        >
+
+          <div />
+          <div />
+          <div />
+          <div />
+        </LoadingRoot>
+        {/* <Progress progress={progress}  /> */}
+      </Col>
+    </Row>
+    </>
   );
 });
 

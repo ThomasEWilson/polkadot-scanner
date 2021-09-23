@@ -7,34 +7,35 @@ import React, { useState, useEffect } from 'react';
 
 import { Loading } from '/ui-components/loading/Loading';
 import { useApi } from '/react-environment/state/modules/api/hooks';
-import { useIsMountedRef, useSubscription, useBlockHashRange } from '/lib'
-import { switchMap } from 'rxjs';
+import { useIsMountedRef, useBlockHashPair } from '/lib'
 import BlockByHash from './ByHash';
 import { isNull, isUndefined } from 'lodash';
+import { AnyNumber } from '@polkadot/types/types';
 
 interface Props {
-  from: BlockNumber;
-  to: BlockNumber;
+  from: BlockNumber | AnyNumber;
+  to: BlockNumber | AnyNumber;
 }
 
-const notNullUndefined = (arg: any) => !isUndefined(arg) && !isNull(arg)
+export const notNullUndefined = (arg: any) => !isUndefined(arg) && !isNull(arg)
 
-function BlockByNumberRange ({ from, to }: Props): React.ReactElement<Props> | null {
+function BlockByNumberRange({ from, to }: Props): React.ReactElement<Props> | null {
   const api = useApi();
   const mountedRef = useIsMountedRef();
-  const [getBlockHash, setState] = useState<[Hash, Hash] | []>([]);
+  const [getBlockHash, setState] = useState<[Hash, Hash] | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  const blockHashRange = useBlockHashRange({from, to})
+  const blockHashRange = useBlockHashPair({from, to});
+  
   useEffect((): void => {
-    if (notNullUndefined(blockHashRange) && blockHashRange.length) {
+    if (notNullUndefined(blockHashRange) && (blockHashRange?.length)) {
       setState([blockHashRange[0], blockHashRange[1]])
     }
   }, [blockHashRange, mountedRef]);
 
-  if (!getBlockHash && !error) {
-    return <Loading />;
-  }
+  // if ((!getBlockHash || getBlockHash?.length) && !error) {
+  //   return <Loading />;
+  // }
 
   return (
     <BlockByHash

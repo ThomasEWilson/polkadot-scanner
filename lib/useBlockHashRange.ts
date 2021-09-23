@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react'
 import type { BlockHash, BlockNumber, Hash } from '@polkadot/types/interfaces';
 
 import { useApi } from '/react-environment/state/modules/api/hooks';
-import { lastValueFrom } from 'rxjs';
+import { lastValueFrom, switchMap } from 'rxjs';
 import { useIsMountedRef } from './useIsMountedRef';
 import { AnyNumber } from '@polkadot/types/types';
-import { U8aFixed } from '@polkadot/types';
+import { useSubscription } from '.';
 
 interface Props { 
     from: BlockNumber | AnyNumber | undefined;
     to: BlockNumber | AnyNumber | undefined;
 }
-export default function useBlockHashRange({from, to}: Props): [Hash,Hash] | [] {
+export function useBlockHashPair({from, to}: Props): [Hash,Hash] | [] {
   const api = useApi();
   const mountedRef = useIsMountedRef();
   const [blockHashRange, setBlockHashRange] = useState<[Hash, Hash] | []>([]);
-
+  
     useEffect((): void => {
         from && to && Promise
           .all([
@@ -29,44 +29,43 @@ export default function useBlockHashRange({from, to}: Props): [Hash,Hash] | [] {
             console.error(error)
           });
       }, [api, mountedRef, from, to]);
+
     return blockHashRange;
 }
 
 
-// export default function useBlockHashRange(hash, hash2): Hash[] | any[] | undefined {
-//     const api = useApi();
-//     const [blockHashRange, setBlockHashRange] = useState<BlockHashRange>();
+export default function useBlockHashRange(hash, hash2): Hash[] | any[] | undefined {
+    const api = useApi();
+    const [blockHashRange, setBlockHashRange] = useState<Hash[] | any[] | undefined>([]);
 
-
-//     useSubscription(() => 
-//         api.isReady
-//             .pipe(
-//                 switchMap((api) => 
-//                     api.query.system.blockHash.range([hash, hash2])
-//                 )
-//             )
-//             .subscribe({
-//                 next: (hashRange) => {
-//                     const range = hashRange.flatMap(([hash, codec]) => hash)
-//                     setBlockHashRange(range?.length ? range : [])
-//                 },
-//                 error: (e) => console.error(e),
-//                 complete: () => console.log('Event Complete: Switching Providers or Losing connection to Node')
-//             }
-//         ), [api]
-//     )
-//     return blockHashRange;
-
-// }
+    useSubscription(() => 
+        api.isReady
+            .pipe(
+                switchMap((api) => 
+                    api.query.system.blockHash.range([hash, hash2])
+                )
+            )
+            .subscribe({
+                next: (hashRange) => {
+                    const range = hashRange.flatMap(([hash, codec]) => hash)
+                    setBlockHashRange(range?.length ? range : [])
+                },
+                error: (e) => console.error(e),
+                complete: () => console.log('Event Complete: Switching Providers or Losing connection to Node')
+            }
+        ), [api]
+    )
+    return blockHashRange;
+}
 
 // useSubscription(() => 
 //     api.isReady
 //         .pipe(
 //             switchMap((api) => 
-//             api.queryMulti([
-//                 [api.query.system.blockHash, from],
-//                 [api.query.system.blockHash, to]
-//             ])
+//                 api.queryMulti([
+//                     [api.query.system.blockHash, from],
+//                     [api.query.system.blockHash, to]
+//                 ])
 //             )
 //         )
 //     .subscribe({

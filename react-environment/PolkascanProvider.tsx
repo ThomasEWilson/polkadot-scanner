@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef } from 'react'
-import Router from 'next/router';
+// import Router from 'next/router';
 import { SWRConfig } from 'swr'
 import { Provider as ReduxProvider, useDispatch } from 'react-redux';
 import { store, StateSideEffect, StoreDispatch } from './state'
@@ -11,6 +11,7 @@ import ThemeProvider from '../ui-components/theme/ThemeProvider';
 import { Layout } from '../ui-components';
 import { SidebarConfig } from '/ui-components/types';
 import { useUser } from './state/modules/application/hooks';
+import Router from 'next/router';
 
 
 export type PolkascanProps = React.PropsWithChildren<{
