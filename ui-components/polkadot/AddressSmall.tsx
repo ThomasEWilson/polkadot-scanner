@@ -56,6 +56,7 @@ function AddressSmall ({ children, className = '', defaultName, onClickName, ove
     </div>
   );
 }
+AddressSmall.displayName = 'Address Small';
 
 export default React.memo(styled(AddressSmall)`
   white-space: nowrap;

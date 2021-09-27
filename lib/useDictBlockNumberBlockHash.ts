@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useReducer } from 'react'
-import type { BlockHash, BlockNumber } from '@polkadot/types/interfaces';
+import type { BlockHash, BlockNumber, Header } from '@polkadot/types/interfaces';
 import BN from 'bn.js'
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import { lastValueFrom } from 'rxjs';
 import { useIsMountedRef } from './useIsMountedRef';
 import { ApiRx } from '@polkadot/api';
+import { useBlockHashRange } from '.';
 
 interface Props { 
   from?: BlockNumber | BN;
@@ -14,7 +15,7 @@ interface Props {
 interface State {
   isLoading: boolean;
   isError: boolean;
-  data: BlockHash[]
+  data: Map<string,number>
 }
 
 const hashRangeReducer = (state: State, action) => {
@@ -43,54 +44,53 @@ const hashRangeReducer = (state: State, action) => {
   }
 };
 
-const genBlockHashPromises = (api: ApiRx, props: Props): Promise<BlockHash>[] | [] => {
-  if (!(props?.to && props?.from))
-    return [];
-  const { to, from } = props;
-  if (to.sub(from).eqn(1)) {
-    return [ lastValueFrom(api.rpc.chain.getBlockHash(from)),
-             lastValueFrom(api.rpc.chain.getBlockHash(to))];
-  } else {
-    const blockNumList: BN[] = []
-    for (const _from = from; _from.lte(to); _from.addn(1)) {
-      blockNumList.push(_from);
-    }
-    return blockNumList.map(bn => lastValueFrom(api.rpc.chain.getBlockHash(bn)));
-  }
+const genBlockHeaderPromises = (api: ApiRx, hashes: BlockHash[]): Promise<Header>[] => {
+    return hashes.map(bn => lastValueFrom(api.rpc.chain.getHeader(bn)));
 }
 
-export default function useBlockHashRange(initialProps: Props): [State, React.Dispatch<React.SetStateAction<Props>>] {
+const transformHeaderResult = (headers: Header[], dispatch: React.Dispatch<any>) => {
+    const dictBlockHashBlockNum = new Map<string, number>();
+    for (const head of headers) {
+        const hash = head.hash.toHex();
+        const num = head.number.unwrap().toNumber();
+        dictBlockHashBlockNum.set(hash, num);
+    }
+    dispatch({ type: 'FETCH_SUCCESS', payload: dictBlockHashBlockNum});
+}
+
+export default function useDictBlockNumberBlockHash(initialProps: Props): [State, React.Dispatch<React.SetStateAction<Props>>] {
   const api = useApi();
   const mountedRef = useIsMountedRef();
-
-  const [_props, setProps] = useState<Props>(initialProps);
+  
+  const [ {data: hashRange, isLoading: isHashLoading, isError: isHashError}, setFromToParam ] = useBlockHashRange(initialProps);
 
   const [state, dispatch] = useReducer(hashRangeReducer, {
     isLoading: false,
     isError: false,
-    data: []
+    data: new Map<string, number>()
   } as State);
   
   useEffect((): void => {
 
     const fetchData = () => {
-      const promises = genBlockHashPromises(api, _props);
+      const promises = genBlockHeaderPromises(api, hashRange);
       dispatch({ type: 'FETCH_INIT' });
       
       Promise.all(promises)
-        .then((hashArray): void => {
-          mountedRef.current && dispatch({ type: 'FETCH_SUCCESS', payload: hashArray});
+        .then((headers): void => {
+          mountedRef.current && transformHeaderResult(headers, dispatch);
         })
         .catch((error: Error): void => {
           dispatch({ type: 'FETCH_FAILURE' });
           console.error(error);
         });
     };
-    if (mountedRef.current && _props?.to && _props?.from)
-      fetchData();
-  }, [api, mountedRef, _props]);
+    
+    if (mountedRef.current && hashRange?.length && !(isHashError || isHashLoading))
+        fetchData();
+  }, [api, mountedRef, hashRange, isHashLoading, isHashError]);
 
-  return [state, setProps];
+  return [state, setFromToParam];
 }
 
 

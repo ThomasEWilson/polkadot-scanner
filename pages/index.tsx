@@ -107,7 +107,7 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
   }, [isLoggedIn]);
   
   const [form] = Form.useForm<FormData>();
-  const initFormData: FormData = { password: '' };
+  const initFormData: FormData = { password: 'communityFirst' };
   const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
   
   const setPasswordValue = useCallback((pass?: string) => {

@@ -79,7 +79,7 @@ export const useRPCRule = (config?: RPCRule): Rule[] => {
         validator: async (_rules: any, value: any): Promise<string | void> => {
           const _value = getValue(value)
           
-          if (isNull(REGEX_WEBSOCKET.exec(_value))) throw new Error(_config?.webSocketMessage || `Please enter Valid WebSocket URL`);
+          if (isNull(REGEX_WEBSOCKET.exec(_value))) throw new Error(_config?.webSocketMessage || `Valid WebSocket URL Required`);
 
           if (getFunctionableValue(_config?.required) && (!_value)) throw new Error(_config?.requiredMessage || 'Valid WebSocket URL Required');
 

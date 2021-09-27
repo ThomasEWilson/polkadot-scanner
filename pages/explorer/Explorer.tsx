@@ -1,15 +1,16 @@
-import type { NextPage } from 'next'
 import React, { useEffect, useRef, useState, FC, useCallback } from 'react';
+import BN from 'bn.js';
 import styled from 'styled-components'
 
-import BlockByNumberRange, { notNullUndefined } from './block-info/ByNumberRange';
-
+import {default as BlocksByNumberRange} from './block-info/ByHash';
 import { useIdleTimer } from 'react-idle-timer'
 import { useDataChanger, useBestNumber, useNumberRule, useRPCRule } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 import { Button, Card, FlexBox, Form, FormItem, Input } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
 import { isEmpty, isNumber } from 'lodash';
+import { BlockNumber } from '@polkadot/types/interfaces';
+
 
 const CForm = styled(Form)`
   margin-top: 60px;
@@ -44,17 +45,23 @@ interface FormData {
   toBlockNumber?: number;
 }
 
+interface BlockNumberProps {
+  from: BlockNumber | BN;
+  to: BlockNumber | BN;
+}
 
 const ExplorerPage: FC = () => {
   const setTitle = useSetTitle();
   useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
 
+  const currentBestNumber = useBestNumber();
+  const currentBestNumberRef = useRef<BlockNumber|undefined>(currentBestNumber);
+  const [hasBestNumberInit, setBestNumberInit] = useState<boolean>(false);
+
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [form] = Form.useForm<FormData>();
-  const currentBestNumber = useBestNumber();
-  const [hasBestNumberInit, setBestNumberInit] = useState<boolean>(false);
-  const [isSearching, setSearching] = useState<boolean>(false)
-  const [searchParams, setSearchParams] = useState<[number, number] | null>(null);
+  const [isSearching, setSearching] = useState<boolean>(false);
+  const [searchParams, setSearchParams] = useState<BlockNumberProps | null>(null);
 
   
   const initFormData: FormData = {
@@ -71,7 +78,7 @@ const ExplorerPage: FC = () => {
     requiredMessage: `Blocknumber required (+int <= toBlockNumber)`,
     min: 0,
     minMessage: 'Must be greater than zero',
-    max: dataRef?.current?.toBlockNumber ?? currentBestNumber?.toNumber() ?? 6829988,
+    max: dataRef?.current?.toBlockNumber ?? currentBestNumberRef?.current?.toNumber() ?? 6829988,
     maxMessage: 'Must be less than (<) BlockNumber (TO) - 1'
   });
   const toBlockRules = useNumberRule({
@@ -79,7 +86,7 @@ const ExplorerPage: FC = () => {
     requiredMessage: `Blocknumber required (+int >= fromBlockNumber)`,
     min: dataRef?.current?.fromBlockNumber ?? 0,
     minMessage: 'Must be greater than fromBlockNumber',
-    max: currentBestNumber?.toNumber() ?? 6829988,
+    max: currentBestNumberRef?.current?.toNumber() ?? 6829988,
     maxMessage: 'Must be lessthan or equal (<=) current Block Number'
   });
 
@@ -138,14 +145,16 @@ const ExplorerPage: FC = () => {
 
   //   Action on search
   const search = async () => {
+
       if (await handlePreCheck()
             && isNumber(data.fromBlockNumber) && isNumber(data.toBlockNumber)) {
         setErrorMessage(``);
         setSearching(true);
-        setSearchParams([data.fromBlockNumber, data.toBlockNumber]);
+        const from = new BN(data.fromBlockNumber) as BlockNumber;
+        const to = new BN(data.toBlockNumber) as BlockNumber;
+        setSearchParams({from, to} as BlockNumberProps);
       } else
           setErrorMessage(`Search struggles.. - kindly \nuse positive integers or simply go idle for defaults.`);
-
   }
 
   const reset = () => {
@@ -156,6 +165,7 @@ const ExplorerPage: FC = () => {
 
   const handleOnIdle = event => {
     console.log('user is idle', event)
+    reset();
     idleRef.current = true;
   }
 
@@ -173,9 +183,9 @@ const ExplorerPage: FC = () => {
 
      // Initialize Inputs with API Values
   useEffect(() => {
-    if ( !currentBestNumber ) return;
+    if ( !currentBestNumberRef?.current ) return;
     if ( idleRef.current || !hasBestNumberInit) {
-        const _bestNumber = currentBestNumber.toNumber()
+        const _bestNumber = currentBestNumberRef?.current.toNumber()
         update({
           fromBlockNumber: _bestNumber - 1,
           toBlockNumber: _bestNumber
@@ -187,7 +197,7 @@ const ExplorerPage: FC = () => {
         });
         if ( !hasBestNumberInit ) setBestNumberInit(true);
     }
-  }, [currentBestNumber, hasBestNumberInit, idleRef, update, form]);
+  }, [currentBestNumberRef, hasBestNumberInit, idleRef, update, form]);
 
   return (
     <>
@@ -241,10 +251,10 @@ const ExplorerPage: FC = () => {
       </CCard>
     </CForm>
         { isSearching && searchParams &&
-              <BlockByNumberRange
-                from={searchParams?.[0]}
-                to={searchParams?.[1]}
-              />
+            <BlocksByNumberRange
+              // error={error}
+              searchProps={searchParams}
+          />
         }
     </>
   )

@@ -91,6 +91,7 @@ const Expander = ({ children, className = '', help, helpIcon, isOpen, isPadded, 
     <>
       <Collapse
         bordered={false}
+        collapsible='disabled'
       >
         <Panel header={CHeaderMain} key="1" extra={headerSub}>
           {hasContent && 

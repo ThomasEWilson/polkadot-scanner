@@ -1,6 +1,6 @@
 import { Col, Row } from 'antd';
 import { isString } from 'lodash';
-import React, { FC, memo, useState, useEffect } from 'react';
+import React, { FC, memo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { BareProps } from '../types'
 import { useLoadingStatus, useSetLoadingStatus } from '/react-environment/state/modules/application/hooks';
@@ -80,10 +80,9 @@ export const Loading: FC<LoadingProps> = memo(({ className, size, width, status,
     <>
     <Row 
       justify='end'
+      align='middle'
     >
-      <Col
-      >
-        <h3>Status: ${loadingStatus}</h3>
+        <h3>Status: ${loadingStatus}&nbsp;&nbsp;&nbsp;</h3>
         <LoadingRoot
           className={className}
           size={size}
@@ -96,7 +95,6 @@ export const Loading: FC<LoadingProps> = memo(({ className, size, width, status,
           <div />
         </LoadingRoot>
         {/* <Progress progress={progress}  /> */}
-      </Col>
     </Row>
     </>
   );
