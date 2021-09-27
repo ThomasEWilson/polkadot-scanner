@@ -53,6 +53,7 @@ interface State {
 
 const mutateLoadingMessage = (isLoading, dispatch) => {
   dispatch(isLoading ? `Grabbing Blocks & their Events by Hash Range` : ``);
+  return isLoading;
 }
 const byHashReducer = (state: State, action) => {
   switch (action.type) {
@@ -60,6 +61,13 @@ const byHashReducer = (state: State, action) => {
       return {
         ...state,
         isLoading: true,
+        isError: false
+      };
+
+    case 'DICT_FETCH_SUCCESS':
+      return {
+        ...state,
+        isLoading: false,
         isError: false
       };
     case 'ALL_FETCH_SUCCESS':
@@ -101,68 +109,76 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
     tableData: { rows: [], cols: [] }
   });
 
-  // DISPATCH FETCH DATA STATE
+  // STATE DISPATCHER - FETCH DATA STATE
   useEffect(() => {
-    const onQueryStatusChange = () => {
+    const onQueryStateChange = () => {
       const queryError = isDictError || isEventsError,
         queryLoading = isDictLoading || isEventsLoading;
       if (queryError)
         dispatch({ type: 'FETCH_FAILURE', payload: 'Something bad happened...' });
-      else if (queryLoading)
-        dispatch({ type: 'FETCH_INIT' })
-      //isDictLoading --> false, isEventsLoading -- not started.
-      else if (!eventsByHash.length && dictBlockHashBlockNum.size)
-        setHashRangeProp({ hashRange: [...dictBlockHashBlockNum.keys()] });
+      else if (queryLoading) {
+        if (isEventsLoading || !dictBlockHashBlockNum.size)
+          mutateLoadingMessage(queryLoading, setLoadingStatus) && dispatch({ type: 'FETCH_INIT' });
+        else
+          dispatch({ type: 'DICT_FETCH_SUCCESS' });
+      }
       else
         dispatch({ type: 'ALL_FETCH_SUCCESS' });
     };
-    mountedRef.current && onQueryStatusChange();
-  }, [mountedRef, isDictLoading, isEventsLoading, isDictError, isEventsError,
-    eventsByHash.length, dictBlockHashBlockNum, setHashRangeProp]);
+    mountedRef.current && onQueryStateChange();
+  }, [mountedRef, isDictLoading, isEventsLoading, isDictError, isEventsError, 
+      dictBlockHashBlockNum.size, setLoadingStatus]);
 
-  // SET LOADING MSG
+  // SET EVENTS QUERY BY HASH-RANGE --> useEventsByHashRange(range)
   useEffect(() => {
-    mountedRef.current && mutateLoadingMessage(isLoading, setLoadingStatus);
-  }, [mountedRef, isLoading, setLoadingStatus]);
+    if (isLoading || isError || !dictBlockHashBlockNum.size || eventsByHash.length) return;
+    const queryEvents = () => {  
+      setHashRangeProp({ hashRange: [...dictBlockHashBlockNum.keys()] });
+    }
+    mountedRef.current && queryEvents()
+  }, [mountedRef, isLoading, isError,
+       eventsByHash.length, dictBlockHashBlockNum, setHashRangeProp]);
 
 
   // use mapped blocks and events to generate the data for table.
   useEffect(() => {
     if (isError || isLoading || !eventsByHash.length) return;
-
-    const ExpanderFactory = (event) => {
-      const { meta, method, section } = event
-      return event ? <Expander
-        summary={`${section}.${method}`}
-        summaryMeta={meta.documentation.toString()}></Expander>
-        : <></>;
-    }
-
-    const columns: ColumnsType<BlockEventDetails> = [
-      { title: 'Block Number', dataIndex: 'blocknumber' },
-      { title: 'Event Name', dataIndex: 'eventName' },
-      {
-        title: 'Event Action',
-        dataIndex: 'event-section-method-meta-row',
-        render: ({ event }) => ExpanderFactory(event)
-      },
-    ];
-
-    let prevBlockNum = 0, blockCount = 0;
-    const eRows: BlockEventDetails[] = [];
-    for (let j = 0; j < eventsByHash.length; j++) {
-      const { record, blockHash } = eventsByHash[j];
-      const blockNumber = dictBlockHashBlockNum.get(blockHash ?? '')
-      blockCount = (prevBlockNum !== blockNumber) ? 1 : ++blockCount;
-      eRows.push(
+    const mapEventsToTable = () => {
+      const ExpanderFactory = (event) => {
+        const { meta, method, section } = event
+        return event ? <Expander
+          summary={`${section}.${method}`}
+          summaryMeta={meta.documentation.toString()}></Expander>
+          : <></>;
+      }
+  
+      const columns: ColumnsType<BlockEventDetails> = [
+        { title: 'Block Number', dataIndex: 'blocknumber' },
+        { title: 'Event Name', dataIndex: 'eventName' },
         {
-          key: `${blockNumber}-${blockCount}`,
-          blocknumber: blockNumber,
-          eventName: record.event.section.toString(),
-          record: record
-        });
+          title: 'Event Action',
+          dataIndex: 'event-section-method-meta-row',
+          render: ({ event }) => ExpanderFactory(event)
+        },
+      ];
+  
+      let prevBlockNum = 0, blockCount = 0;
+      const eRows: BlockEventDetails[] = [];
+      for (let j = 0; j < eventsByHash.length; j++) {
+        const { record, blockHash } = eventsByHash[j];
+        const blockNumber = dictBlockHashBlockNum.get(blockHash ?? '')
+        blockCount = (prevBlockNum !== blockNumber) ? 1 : ++blockCount;
+        eRows.push(
+          {
+            key: `${blockNumber}-${blockCount}`,
+            blocknumber: blockNumber,
+            eventName: record.event.section.toString(),
+            record: record
+          });
+      }
+      dispatch({ type: 'TABLE_READY', payload: { rows: eRows, cols: columns } });
     }
-    dispatch({ type: 'TABLE_READY', payload: { rows: eRows, cols: columns } });
+    mapEventsToTable();
   }, [isLoading, isError, eventsByHash, dictBlockHashBlockNum]);
 
   return (
@@ -190,3 +206,4 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
 
 export default React.memo(BlockByHash);
 
+// git commit -m "add useReducer() API Calls refactor. adding useDictBlockNumberBlockHash and useEventByHashRange. update ByHash side-effects for component state management, loadingMsg, event --> table mapping."
