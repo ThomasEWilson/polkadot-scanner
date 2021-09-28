@@ -59,7 +59,7 @@ function transformRangeResults(blockRangeEvents: Vec<EventRecord>[]): KeyedEvent
 
   const blockEventsByHash = blockRangeEvents.flatMap(
     (events, index: number) => {
-      let hash = events.createdAtHash;
+      let hash = events.createdAtHash?.toHex();
       return events.map((record, idx) => ({
         blockHash: hash,
         indexes: [idx],

@@ -55,7 +55,9 @@ const ExplorerPage: FC = () => {
   useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
 
   const currentBestNumber = useBestNumber();
+
   const currentBestNumberRef = useRef<BlockNumber|undefined>(currentBestNumber);
+
   const [hasBestNumberInit, setBestNumberInit] = useState<boolean>(false);
 
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -78,7 +80,7 @@ const ExplorerPage: FC = () => {
     requiredMessage: `Blocknumber required (+int <= toBlockNumber)`,
     min: 0,
     minMessage: 'Must be greater than zero',
-    max: dataRef?.current?.toBlockNumber ?? currentBestNumberRef?.current?.toNumber() ?? 6829988,
+    max: dataRef?.current?.toBlockNumber ?? currentBestNumber?.toNumber() ?? 6829988,
     maxMessage: 'Must be less than (<) BlockNumber (TO) - 1'
   });
   const toBlockRules = useNumberRule({
@@ -86,7 +88,7 @@ const ExplorerPage: FC = () => {
     requiredMessage: `Blocknumber required (+int >= fromBlockNumber)`,
     min: dataRef?.current?.fromBlockNumber ?? 0,
     minMessage: 'Must be greater than fromBlockNumber',
-    max: currentBestNumberRef?.current?.toNumber() ?? 6829988,
+    max: currentBestNumber?.toNumber() ?? 6829988,
     maxMessage: 'Must be lessthan or equal (<=) current Block Number'
   });
 
@@ -165,7 +167,6 @@ const ExplorerPage: FC = () => {
 
   const handleOnIdle = event => {
     console.log('user is idle', event)
-    reset();
     idleRef.current = true;
   }
 
@@ -177,15 +178,14 @@ const ExplorerPage: FC = () => {
   const { isIdle } = useIdleTimer({
     timeout: 1000 * 20,
     onIdle: handleOnIdle,
-    onActive: handleOnActive,
+    onActive: handleOnActive
   })
   const idleRef = useRef<boolean>(isIdle());
 
      // Initialize Inputs with API Values
   useEffect(() => {
-    if ( !currentBestNumberRef?.current ) return;
-    if ( idleRef.current || !hasBestNumberInit) {
-        const _bestNumber = currentBestNumberRef?.current.toNumber()
+    if ( idleRef.current && isIdle()) {
+        const _bestNumber = currentBestNumber?.toNumber() ?? 6829988;
         update({
           fromBlockNumber: _bestNumber - 1,
           toBlockNumber: _bestNumber
@@ -195,9 +195,9 @@ const ExplorerPage: FC = () => {
           fromBlockNumber: _bestNumber - 1,
           toBlockNumber: _bestNumber
         });
-        if ( !hasBestNumberInit ) setBestNumberInit(true);
+        setBestNumberInit(true);
     }
-  }, [currentBestNumberRef, hasBestNumberInit, idleRef, update, form]);
+  }, [currentBestNumber, hasBestNumberInit, idleRef, update, form]);
 
   return (
     <>
@@ -209,7 +209,7 @@ const ExplorerPage: FC = () => {
         <CFormItem
           initialValue={initFormData.rpcUrl}
           name='rpcUrl'
-          rules={rpcRules}
+          // rules={rpcRules}
         >
           <Input 
             prefix={(<CPrefix>RPC URL:</CPrefix>)}

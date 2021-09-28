@@ -144,11 +144,15 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
   useEffect(() => {
     if (isError || isLoading || !eventsByHash.length) return;
     const mapEventsToTable = () => {
-      const ExpanderFactory = (event) => {
+      const ExpanderFactory = (record: EventRecord) => {
+        const event = record.event;
+        const phase = record.phase;
+        const types = event.typeDef;
+
         const { meta, method, section } = event
-        return event ? <Expander
+        return event ? (<Expander
           summary={`${section}.${method}`}
-          summaryMeta={meta.documentation.toString()}></Expander>
+          summaryMeta={meta}></Expander>)
           : <></>;
       }
   
@@ -157,24 +161,28 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
         { title: 'Event Name', dataIndex: 'eventName' },
         {
           title: 'Event Action',
-          dataIndex: 'event-section-method-meta-row',
-          render: ({ event }) => ExpanderFactory(event)
+          dataIndex: 'record',
+          render: (row) => ExpanderFactory(row)
         },
       ];
   
-      let prevBlockNum = 0, blockCount = 0;
+      let prevBlockNum = 0, eventCountPerBlock = 0;
       const eRows: BlockEventDetails[] = [];
-      for (let j = 0; j < eventsByHash.length; j++) {
-        const { record, blockHash } = eventsByHash[j];
+      for (let i = 0; i < eventsByHash.length; i++) {
+        const { record, blockHash } = eventsByHash[i];
         const blockNumber = dictBlockHashBlockNum.get(blockHash ?? '')
-        blockCount = (prevBlockNum !== blockNumber) ? 1 : ++blockCount;
+        if (prevBlockNum !== blockNumber) {
+          eventCountPerBlock = 1;
+          prevBlockNum = blockNumber ?? 0;
+        }
         eRows.push(
           {
-            key: `${blockNumber}-${blockCount}`,
+            key: `${blockNumber} - ${eventCountPerBlock}`,
             blocknumber: blockNumber,
             eventName: record.event.section.toString(),
             record: record
           });
+        ++eventCountPerBlock;
       }
       dispatch({ type: 'TABLE_READY', payload: { rows: eRows, cols: columns } });
     }

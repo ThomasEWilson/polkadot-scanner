@@ -58,7 +58,7 @@ export const useNumberRule = (config?: NumberRule): Rule[] => {
         }
       }
     ] as any;
-  }, [_config]);
+  }, [_config, _config?.max, _config?.min]);
 
   return rules;
 };
