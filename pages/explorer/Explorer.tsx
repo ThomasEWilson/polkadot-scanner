@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import {default as BlocksByNumberRange} from './block-info/ByHash';
 import { useIdleTimer } from 'react-idle-timer'
-import { useDataChanger, useBestNumber, useNumberRule, useRPCRule } from '/lib';
+import { useDataChanger, useBestNumber, useNumberRule, useRPCRule, useIsMountedRef } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 import { Button, Card, FlexBox, Form, FormItem, Input } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
@@ -56,15 +56,11 @@ const ExplorerPage: FC = () => {
 
   const currentBestNumber = useBestNumber();
 
-  const currentBestNumberRef = useRef<BlockNumber|undefined>(currentBestNumber);
-
-  const [hasBestNumberInit, setBestNumberInit] = useState<boolean>(false);
-
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [form] = Form.useForm<FormData>();
   const [isSearching, setSearching] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState<BlockNumberProps | null>(null);
-
+  const mountedRef = useIsMountedRef();
   
   const initFormData: FormData = {
     rpcUrl: 'wss://rpc.polkadot.io',
@@ -182,9 +178,17 @@ const ExplorerPage: FC = () => {
   })
   const idleRef = useRef<boolean>(isIdle());
 
+  // IDLE SIDE EFFECT UPDATER
+  useEffect(() => {
+    const updateIdleRef = () => {
+        idleRef.current = isIdle();
+    }
+    updateIdleRef();
+  }, [isIdle, idleRef])
      // Initialize Inputs with API Values
   useEffect(() => {
-    if ( idleRef.current && isIdle()) {
+    const updateFields = () => {
+      if ( idleRef.current || (1000 > 100/Math.random())) {
         const _bestNumber = currentBestNumber?.toNumber() ?? 6829988;
         update({
           fromBlockNumber: _bestNumber - 1,
@@ -195,9 +199,10 @@ const ExplorerPage: FC = () => {
           fromBlockNumber: _bestNumber - 1,
           toBlockNumber: _bestNumber
         });
-        setBestNumberInit(true);
+      }
     }
-  }, [currentBestNumber, hasBestNumberInit, idleRef, update, form]);
+    mountedRef.current && updateFields()
+  }, [mountedRef, currentBestNumber, idleRef, update, form]);
 
   return (
     <>
