@@ -69,14 +69,16 @@ interface RPCRule {
   WSS_REGEX: RegExp;
 }
 
-export const useRPCRule = (config?: RPCRule): Rule[] => {
+export const useRPCRule = (config: RPCRule): Rule[] => {
   const _config = useMemorized(config);
   const rules = useMemo(() => {
+    let m;
     return [
       {
         validator: async (_rules: any, value: any): Promise<string | void> => {
           const _value = getValue(value)
-          let m;
+          // Hack to allow same REGEX to re-match. 
+          _config.WSS_REGEX.lastIndex = 0;
 
           if ((m = _config?.WSS_REGEX.exec(_value)) === null) throw new Error(_config?.webSocketMessage || `Ensure WebSocket URL is Valid.`);
 
@@ -86,7 +88,7 @@ export const useRPCRule = (config?: RPCRule): Rule[] => {
         }
       }
     ] as any;
-  }, [_config, _config?.WSS_REGEX]);
+  }, [_config]);
 
   return rules;
 };
