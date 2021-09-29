@@ -113,7 +113,7 @@ const ExplorerPage: FC = () => {
     maxMessage: 'Must be lessthan or equal (<=) current Block Number'
   });
 
-  const rpcRules = useRPCRule({});
+  const rpcRules = useRPCRule({ WSS_REGEX: /^(wss|ws):\/\/([a-zA-Z0-9]{0,9}(?:\.[a-zA-Z0-9]{0,9}){0,}|[a-zA-Z0-9]+):?([0-9]{0,5})/gmi});
 
   const setRPCValue = useCallback((rpcVal?: string) => {
     const _data = { rpcUrl: dataRef.current.rpcUrl };
@@ -169,6 +169,8 @@ const ExplorerPage: FC = () => {
 
   //   Action on search
   const search = useCallback(async () => {
+      if (isSearching) resetQueryState();
+
       if (await handlePreCheck()
             && isNumber(dataRef.current.fromBlockNumber) && isNumber(dataRef.current.toBlockNumber)) {
         if (POLKAENDPOINT !== dataRef.current.rpcUrl) {
@@ -182,8 +184,8 @@ const ExplorerPage: FC = () => {
         setSearchParams({from, to} as BlockNumberProps);
         isDefaultSet.current = false;
       } else
-          setErrorMessage(`Search struggles.. - kindly \nuse positive integers or simply go idle for defaults.`);
-  }, [dataRef, handlePreCheck, isDefaultSet, setFirstEndpointRef]);
+          setErrorMessage(`Try + numbers or simply go idle for defaults.`);
+  }, [dataRef, handlePreCheck, isDefaultSet, setFirstEndpointRef, isSearching]);
 
   
   const resetQueryState = () => {

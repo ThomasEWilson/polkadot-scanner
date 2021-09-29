@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import React from 'react';
-import { default as ExplorerPage } from '/ui-components/block-info/Explorer';
+import { default as ExplorerPage } from '../../ui-components/explorer/Explorer';
 import withSession from '/lib/session'
 
 

@@ -66,12 +66,11 @@ export const useNumberRule = (config?: NumberRule): Rule[] => {
 interface RPCRule {
   webSocketMessage?: string
   requiredMessage?: string;
+  WSS_REGEX: RegExp;
 }
 
-const REGEX_WSS = /^(wss|ws):\/\/([a-zA-Z0-9]{0,9}(?:\.[a-zA-Z0-9]{0,9}){0,}|[a-zA-Z0-9]+):?([0-9]{0,5})/gmi;
 export const useRPCRule = (config?: RPCRule): Rule[] => {
   const _config = useMemorized(config);
-  
   const rules = useMemo(() => {
     return [
       {
@@ -79,7 +78,7 @@ export const useRPCRule = (config?: RPCRule): Rule[] => {
           const _value = getValue(value)
           let m;
 
-          if ((m = REGEX_WSS.exec(_value)) === null) throw new Error(_config?.webSocketMessage || `Ensure WebSocket URL is Valid.`);
+          if ((m = _config?.WSS_REGEX.exec(_value)) === null) throw new Error(_config?.webSocketMessage || `Ensure WebSocket URL is Valid.`);
 
           if (!_value) throw new Error(_config?.requiredMessage || 'WebSocket URL Required');
 
@@ -87,7 +86,7 @@ export const useRPCRule = (config?: RPCRule): Rule[] => {
         }
       }
     ] as any;
-  }, [_config]);
+  }, [_config, _config?.WSS_REGEX]);
 
   return rules;
 };
