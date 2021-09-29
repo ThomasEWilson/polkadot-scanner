@@ -4,23 +4,23 @@ import { default as ExplorerPage } from '/ui-components/block-info/Explorer';
 import withSession from '/lib/session'
 
 
-export const getServerSideProps = withSession(async function ({ req, res }) {
-  // Get the user's session based on the request
-  const user = req.session.get('user')
+// export const getServerSideProps = withSession(async function ({ req, res }) {
+//   // Get the user's session based on the request
+//   const user = req.session.get('user')
 
-  if (!user) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    }
-  }
+//   if (!user) {
+//     return {
+//       redirect: {
+//         destination: '/',
+//         permanent: false,
+//       },
+//     }
+//   }
 
-  return {
-    props: { user },
-  }
-})
+//   return {
+//     props: { user },
+//   }
+// })
 
 const Explorer: NextPage = () => {   
 
