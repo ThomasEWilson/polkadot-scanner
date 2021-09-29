@@ -39,6 +39,9 @@ export const Inner: FC<PolkascanProps> = ({ children, config, sidebarConfig, rou
         if (isBrowser() && !isUserAuthenticated && pathIsProtected) {
             router.push('/');
         }
+        else if (isBrowser() && isUserAuthenticated) {
+            router.push('/explorer')
+        }
     }, [router, router?.pathname, isUserAuthenticated, unprotectedRoutes]);
 
     useEffect(() => {

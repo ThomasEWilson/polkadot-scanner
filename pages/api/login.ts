@@ -12,16 +12,16 @@ type Body = {
   nonce: string
 }
 
-const stringU8A_to_Uint8Array = (str) => {
-  const u8a = new Uint8Array(str.split(',').map(x => +x));
-  return u8a;
-}
 
 export default withSession(async (req, res) => {
   try {
     const { encrypted, nonce } = await req.body;
     const compare = new Uint8Array(Object.values(encrypted))
-
+    
+    const stringU8A_to_Uint8Array = (str) => {
+      const u8a = new Uint8Array(str.split(',').map(x => +x));
+      return u8a;
+    }
     const stringu8aEncryptedPass = process.env.ENCRYPTED_PASS ?? '';
     const uint8array_ENCRYPTED_PASS = stringU8A_to_Uint8Array(stringu8aEncryptedPass);
 

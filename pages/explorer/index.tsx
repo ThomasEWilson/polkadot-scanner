@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import React from 'react';
-import { default as ExplorerPage } from './Explorer';
+import { default as ExplorerPage } from '/ui-components/block-info/Explorer';
 import withSession from '/lib/session'
 
 
@@ -22,7 +22,7 @@ export const getServerSideProps = withSession(async function ({ req, res }) {
   }
 })
 
-const Explorer: NextPage = ({ }) => {   
+const Explorer: NextPage = () => {   
 
   return (<ExplorerPage/>)
 }
