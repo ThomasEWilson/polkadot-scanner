@@ -82,7 +82,7 @@ const Expander = ({ children, className = '', help, helpIcon, isOpen, isPadded, 
   );
 
   const hasContent = useMemo(
-    () => !!renderChildren || (!!children && (!Array.isArray(children) || children.length !== 0)),
+    () => !!renderChildren || (!!children),
     [children, renderChildren]
   );
 
@@ -91,7 +91,6 @@ const Expander = ({ children, className = '', help, helpIcon, isOpen, isPadded, 
     <>
       <Collapse
         bordered={false}
-        collapsible='disabled'
       >
         <Panel header={CHeaderMain} key="1" extra={headerSub}>
           {hasContent && 

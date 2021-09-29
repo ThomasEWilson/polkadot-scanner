@@ -7,7 +7,6 @@ export { Form as Form, FormItem } from './Form';
 export { default as Layout } from './Layout';
 export { Paragraph as Paragraph } from './Paragraph';
 export { ScrollCard as ScrollCard } from './ScrollCard';
-export { SearchInput as SearchInput } from './SearchInput';
 export { Button as Button } from './Button';
 export { Card as Card } from './Card';
 export { Sidebar as Sidebar } from './Sidebar';

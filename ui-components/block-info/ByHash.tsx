@@ -16,6 +16,8 @@ import { useIsMountedRef, useEventsByHashRange, useDictBlockNumberBlockHash } fr
 
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import { useSetLoadingStatus } from '/react-environment/state/modules/application/hooks';
+import { GenericEventData } from '@polkadot/types';
+import { TypeDef } from '@polkadot/types/types';
 
 interface BlockNumberProps {
   from: BlockNumber | BN;
@@ -32,6 +34,11 @@ interface BlockEventDetails {
   blockNumber: number;
   eventName: string;
   record: EventRecord;
+}
+interface EventArgs {
+  key: number | string;
+  type: string;
+  data: string;
 }
 
 const ErrorBtn = styled(Button).attrs({ as: Button })`
@@ -93,6 +100,24 @@ const byHashReducer = (state: State, action) => {
   }
 };
 
+const CInnerExpander = (eventDataList: GenericEventData, types: TypeDef[]) => {
+  const columns = [
+    { title: "Type", dataIndex: "type" },
+    { title: "Data", dataIndex: "data" }
+  ];
+
+  const rows: EventArgs[] = [];
+  eventDataList.forEach((data, index) => {
+    rows.push({
+      key: index,
+      type: types[index].type,
+      data: data.toString()
+    });
+  });
+  // return <Table columns={columns} dataSource={rows} pagination={false} />;
+  return {rows, columns}
+};
+
 
 function BlockByHash({ className = '', searchProps: { from, to } }: Props): React.ReactElement<Props> {
   const api = useApi();
@@ -149,13 +174,15 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
         const event = record.event;
         const phase = record.phase;
         const types = event.typeDef;
+        const { meta, method, section, data } = event
 
-        const { meta, method, section } = event
+        const {rows, columns} = CInnerExpander(data, types);
+
         return event ? (
           <Expander
             summary={`${section}.${method}`}
             summaryMeta={meta}>
-
+              <Table columns={columns} dataSource={rows} pagination={false} />
             </Expander>
           )
           : <></>;
@@ -165,7 +192,8 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
       const columns: ColumnsType<BlockEventDetails> = [
         { title: 'Block Number', dataIndex: 'blockNumber',
           sorter: (a, b) => a.blockNumber - b.blockNumber,
-          sortDirections: ['descend']
+          sortDirections: ['descend'],
+          width: 150
         },
         { title: 'Event Name', dataIndex: 'eventName',
           defaultSortOrder: 'descend',
@@ -188,7 +216,8 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
             }
           ],
           onFilter: (value, record) => record.eventName.includes(value.toString()),
-          sorter: (a, b) => a.eventName.localeCompare(b.eventName)
+          sorter: (a, b) => a.eventName.localeCompare(b.eventName),
+          width: 150
         },
         {
           title: 'Event Action',
@@ -235,7 +264,7 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
               </ErrorBtn>)
               : isLoading || !rows || !cols
                 ? (<CardLoading />)
-                : (<Table<BlockEventDetails> columns={cols} dataSource={rows} pagination={false} />)
+                : (<Table<BlockEventDetails> columns={cols} dataSource={rows} pagination={{ pageSize: 50, hideOnSinglePage: true, size: 'small', position: ['topRight'] }} />)
             }
           </Card.Content>
         </Card>
@@ -245,5 +274,3 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
 }
 
 export default React.memo(BlockByHash);
-
-// git commit -m "add useReducer() API Calls refactor. adding useDictBlockNumberBlockHash and useEventByHashRange. update ByHash side-effects for component state management, loadingMsg, event --> table mapping."

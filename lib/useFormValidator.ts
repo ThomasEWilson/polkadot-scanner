@@ -31,9 +31,9 @@ function getValue (value: any): any {
 }
 
 interface NumberRule {
-  max?: number;
+  max: number;
   maxMessage?: string;
-  min?: number;
+  min: number;
   minMessage?: string;
   required?: boolean | (() => boolean);
   requiredMessage?: string;

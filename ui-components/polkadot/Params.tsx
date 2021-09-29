@@ -20,27 +20,23 @@ interface Props {
   values?: Value[] | Value | null;
 }
 
+const setState = (params, values, dispatchParams) => {
+
+}
+
 function Params ({ children, params: pParams, values: pValues}: Props): React.ReactElement<Props> | null {
   const [params, setParams] = useState<ParamDef[]>([]);
   const [values, setValues] = useState<any[]>([]);
 
   useEffect((): void => {
-    if (pParams) {
-      if (!isArray(pParams))
-        setParams([pParams]);
-      else if (isArray(pParams))
-        setParams(pParams);
+    const doSet = () => {
+      if (pParams)
+        setParams( !isArray(pParams) ? [pParams] : pParams)
+      if (pValues)
+        setValues( !isArray(pValues) ? [pValues] : pValues);
     }
-  }, [pParams]);
-
-  useEffect((): void => {
-    if (pValues) {
-      if (!isArray(pValues))
-        setValues([pValues]);
-      else if (isArray(pValues))
-        setValues(pValues);
-    }
-  }, [pValues]);
+    doSet();
+  }, [pParams, pValues]);
 
   if (!params.length) {
     return null;

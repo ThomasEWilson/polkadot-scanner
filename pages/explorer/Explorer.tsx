@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, FC, useCallback, useMemo } from 're
 import BN from 'bn.js';
 import styled from 'styled-components'
 
-import {default as BlocksByNumberRange} from './block-info/ByHash';
+import {default as BlocksByNumberRange} from '/ui-components/block-info/ByHash';
 import { useIdleTimer } from 'react-idle-timer'
 import { useDataChanger, useBestNumber, useNumberRule, useRPCRule, useIsMountedRef } from '/lib';
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
