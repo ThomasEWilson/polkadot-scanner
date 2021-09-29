@@ -55,6 +55,12 @@ interface BlockNumberProps {
 
 const POLKAENDPOINT = 'wss://rpc.polkadot.io';
 
+interface ServerProps {
+  user: {
+    isLoggedIn: boolean;
+  };
+}
+
 export const getServerSideProps = withSession(async function ({ req, res }) {
   // Get the user's session based on the request
   const user = req.session.get('user')
@@ -73,7 +79,7 @@ export const getServerSideProps = withSession(async function ({ req, res }) {
   }
 })
 
-const Explorer: NextPage = () => {   
+const Explorer: NextPage<ServerProps> = ({ user }) => {   
   
   const setTitleRef = useRef<(title: string) => void>(useSetTitle());
   const setFirstEndpointRef = useRef<(firstEndpoint: Record<string, string>) => void>(useSetFirstEndpoint());
