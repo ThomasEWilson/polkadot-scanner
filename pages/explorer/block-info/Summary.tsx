@@ -1,7 +1,7 @@
 // Copyright 2017-2021 @polkadot/app-explorer authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { KeyedEvent } from '../types';
+import type { KeyedEvent } from '/ui-components/explorer/types';
 import type { DispatchInfo, SignedBlock, Weight } from '@polkadot/types/interfaces';
 
 import BN from 'bn.js';

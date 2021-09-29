@@ -2,12 +2,11 @@ import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { ApiRx } from '@polkadot/api';
-import  Api from '@polkadot/api/rx';
 
 import { StoreDispatch, StoreState } from '../..';
-import { setApi, setEndpoints } from './actions';
+import { setApi, setEndpoints, setFirstEndpoint } from './actions';
 
-export const useEndpoints = () => {
+export const useEndpoints = (): Record<string,string> => {
   return useSelector((state: StoreState) => state.api.endpoints);
 };
 
@@ -16,6 +15,18 @@ export const useSetEndpoints = () => {
 
   return useCallback((endpoints: Record<string, string>) => {
     dispatch(setEndpoints({ endpoints }));
+  }, [dispatch]);
+};
+
+export const useFirstEndpoint = (): Record<string,string> => {
+  return useSelector((state: StoreState) => state.api.firstEndpoint);
+};
+
+export const useSetFirstEndpoint = () => {
+  const dispatch = useDispatch<StoreDispatch>();
+
+  return useCallback((firstEndpoint: Record<string, string>) => {
+    dispatch(setFirstEndpoint({ firstEndpoint }));
   }, [dispatch]);
 };
 

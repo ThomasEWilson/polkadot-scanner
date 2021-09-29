@@ -9,7 +9,7 @@ import { paramsNotation, Vec } from '@polkadot/types';
 import { isNull, isUndefined } from 'lodash';
 
 import type { Event } from '@polkadot/types/interfaces';
-import { KeyedEvent } from '/pages/explorer/types';
+import { KeyedEvent } from '/ui-components/explorer/types';
 
 interface Props { 
   hashRange?: string[]

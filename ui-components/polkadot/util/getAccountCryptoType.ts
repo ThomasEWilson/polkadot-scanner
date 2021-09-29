@@ -3,9 +3,7 @@
 
 import { keyring } from '@polkadot/ui-keyring';
 
-import { AccountIdIsh } from '../types';
-
-export default function getAccountCryptoType (accountId: AccountIdIsh): string {
+export default function getAccountCryptoType (accountId: any): string {
   try {
     const current = accountId
       ? keyring.getPair(accountId.toString())

@@ -2,6 +2,7 @@ import { BareProps } from '../ui-components/types';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 
 import { ApiRx, WsProvider } from '@polkadot/api';
+import { useEndpoints } from './state/modules/api/hooks';
 
 export interface ApiContextData {
   connected: boolean;
@@ -17,10 +18,18 @@ export const ApiProvider: FC<BareProps> = ({ children }) => {
   const [api, setApi] = useState<ApiRx>();
   const [connected, setConnected] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
+  const endpoints = useEndpoints();
+  // const firstEndpoint = useFirstEndpoint();
   // get endpoints from appConfigState
 
   useEffect(() => {
-    const wsProvider = new WsProvider(POLKAENDPOINT);
+
+    let _endpoints: string[] = [];
+
+      // clear first endpoint
+    _endpoints = Object.values(endpoints);
+
+    const wsProvider = new WsProvider(_endpoints);
 
     const subscriber = ApiRx.create({ provider: wsProvider }).subscribe({
       error: () => {

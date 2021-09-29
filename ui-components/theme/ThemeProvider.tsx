@@ -1,4 +1,4 @@
-import 'antd/dist/antd.css';
+import 'antd/dist/antd.dark.css';
 
 import React, { FC } from 'react';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';

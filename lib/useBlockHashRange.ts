@@ -52,8 +52,9 @@ const genBlockHashPromises = (api: ApiRx, props: Props): Promise<BlockHash>[] | 
              lastValueFrom(api.rpc.chain.getBlockHash(to))];
   } else {
     const blockNumList: BN[] = []
-    for (const _from = from; _from.lte(to); _from.addn(1)) {
-      blockNumList.push(_from);
+    for (let i = from.toNumber(); i <= to.toNumber(); i++) {
+      const bn = new BN(i);
+      blockNumList.push(bn);
     }
     return blockNumList.map(bn => lastValueFrom(api.rpc.chain.getBlockHash(bn)));
   }

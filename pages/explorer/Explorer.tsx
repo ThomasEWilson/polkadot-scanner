@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, FC, useCallback } from 'react';
+import React, { useEffect, useRef, useState, FC, useCallback, useMemo } from 'react';
 import BN from 'bn.js';
 import styled from 'styled-components'
 
@@ -8,8 +8,12 @@ import { useDataChanger, useBestNumber, useNumberRule, useRPCRule, useIsMountedR
 import { useSetTitle } from '/react-environment/state/modules/application/hooks';
 import { Button, Card, FlexBox, Form, FormItem, Input } from '/ui-components'
 import { flexBox, typography } from '/ui-components/utils'
-import { isEmpty, isNumber } from 'lodash';
+import { isEmpty, isNumber, toNumber } from 'lodash';
 import { BlockNumber } from '@polkadot/types/interfaces';
+import { apiResolver } from 'next/dist/server/api-utils';
+import { useApi, useEndpoints, useSetEndpoints, useSetFirstEndpoint } from '/react-environment/state/modules/api/hooks';
+import { firstValueFrom } from 'rxjs';
+import { setFirstEndpoint } from '/react-environment/state/modules/api/actions';
 
 
 const CForm = styled(Form)`
@@ -40,7 +44,7 @@ const CPrefix = styled.span`
   font-weight: 500
 `
 interface FormData { 
-  rpcUrl?: string; 
+  rpcUrl: string; 
   fromBlockNumber: number;
   toBlockNumber?: number;
 }
@@ -50,23 +54,44 @@ interface BlockNumberProps {
   to: BlockNumber | BN;
 }
 
-const ExplorerPage: FC = () => {
-  const setTitle = useSetTitle();
-  useEffect(() => setTitle('Polkadot Block-Range Explorer'), [setTitle]);
+const POLKAENDPOINT = 'wss://rpc.polkadot.io';
 
+const ExplorerPage: FC = () => {
+  const setTitleRef = useRef<(title: string) => void>(useSetTitle());
+  const setFirstEndpointRef = useRef<(firstEndpoint: Record<string, string>) => void>(useSetFirstEndpoint());
+  const isDefaultSet = useRef<boolean>(false);
+
+  useEffect(() => {
+    const updateTitle = () => {
+      setTitleRef.current('Polkadot Block-Range Explorer');
+    }
+    if (isDefaultSet.current == false) {
+      updateTitle();
+    }
+  }, [setTitleRef, isDefaultSet]);
+
+  const api = useApi()
+  const endpoints = useEndpoints()
+  const setEndpoints = useSetEndpoints();
   const currentBestNumber = useBestNumber();
 
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [form] = Form.useForm<FormData>();
   const [isSearching, setSearching] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState<BlockNumberProps | null>(null);
-  const mountedRef = useIsMountedRef();
   
-  const initFormData: FormData = {
-    rpcUrl: 'wss://rpc.polkadot.io',
-    fromBlockNumber: 6829987,
-    toBlockNumber: 6829988 
-  };
+  const mountedRef = useIsMountedRef();
+  const idleRef = useRef<boolean>(true);
+  
+
+  
+  const [form] = Form.useForm<FormData>();
+  const initFormData: FormData = useMemo(() => {
+    return {
+      rpcUrl: 'wss://rpc.polkadot.io',
+      fromBlockNumber: 6829987,
+      toBlockNumber: 6829988 
+    }
+  }, []);
 
   const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
   const requiredFlag = useRef<boolean>(true);
@@ -82,15 +107,13 @@ const ExplorerPage: FC = () => {
   const toBlockRules = useNumberRule({
     required: () => requiredFlag.current,
     requiredMessage: `Blocknumber required (+int >= fromBlockNumber)`,
-    min: dataRef?.current?.fromBlockNumber ?? 0,
+    min: toNumber(dataRef?.current?.fromBlockNumber) ?? 0,
     minMessage: 'Must be greater than fromBlockNumber',
     max: currentBestNumber?.toNumber() ?? 6829988,
     maxMessage: 'Must be lessthan or equal (<=) current Block Number'
   });
 
-  const rpcRules = useRPCRule({
-    required: () => requiredFlag.current
-  });
+  const rpcRules = useRPCRule({});
 
   const setRPCValue = useCallback((rpcVal?: string) => {
     const _data = { rpcUrl: dataRef.current.rpcUrl };
@@ -104,7 +127,7 @@ const ExplorerPage: FC = () => {
   const setFromBlockValue = useCallback((num?: number) => {
     const _data = { fromBlockNumber: dataRef.current.fromBlockNumber };
 
-    _data.fromBlockNumber = num || 0;
+    _data.fromBlockNumber = toNumber(num) || 0;
 
     update(_data);
     form.setFieldsValue(_data);
@@ -113,7 +136,7 @@ const ExplorerPage: FC = () => {
   const setToBlockValue = useCallback((num?: number) => {
     const _data = { toBlockNumber: dataRef.current.toBlockNumber };
 
-    _data.toBlockNumber = num || 0;
+    _data.toBlockNumber = toNumber(num) || 0;
 
     update(_data);
     form.setFieldsValue(_data);
@@ -129,80 +152,93 @@ const ExplorerPage: FC = () => {
     if (changed.toBlockNumber) {
         setToBlockValue(changed.toBlockNumber);
     }
-    update(changed);
-  }, [update, setRPCValue, setFromBlockValue, setToBlockValue]);
+    // update(changed);
+  }, [setRPCValue, setFromBlockValue, setToBlockValue]);
 
   const handlePreCheck = useCallback(async () => {
     try {
       await form.validateFields();
     } catch (e) {
-      return false;
+      return () => {
+        setErrorMessage('Whoops: Validation Error. Try a different input, reset the app, or use defaults by going idle.');
+        return false;
+      };
     }
     return true;
   }, [form]);
 
   //   Action on search
-  const search = async () => {
-
+  const search = useCallback(async () => {
       if (await handlePreCheck()
-            && isNumber(data.fromBlockNumber) && isNumber(data.toBlockNumber)) {
+            && isNumber(dataRef.current.fromBlockNumber) && isNumber(dataRef.current.toBlockNumber)) {
+        if (POLKAENDPOINT !== dataRef.current.rpcUrl) {
+            api.disconnect();
+            setFirstEndpointRef.current({'url': dataRef.current.rpcUrl});
+        }
         setErrorMessage(``);
         setSearching(true);
-        const from = new BN(data.fromBlockNumber) as BlockNumber;
-        const to = new BN(data.toBlockNumber) as BlockNumber;
+        const from = new BN(dataRef.current.fromBlockNumber) as BlockNumber;
+        const to = new BN(dataRef.current.toBlockNumber) as BlockNumber;
         setSearchParams({from, to} as BlockNumberProps);
+        isDefaultSet.current = false;
       } else
           setErrorMessage(`Search struggles.. - kindly \nuse positive integers or simply go idle for defaults.`);
-  }
+  }, [dataRef, handlePreCheck, isDefaultSet, setFirstEndpointRef]);
 
-  const reset = () => {
+  
+  const resetQueryState = () => {
     setSearchParams(null);
     setSearching(false);
     setErrorMessage(``);
   }
-
-  const handleOnIdle = event => {
-    console.log('user is idle', event)
-    idleRef.current = true;
-  }
-
-  const handleOnActive = event => {
-    console.log('user is active', event)
-    idleRef.current = false;
-  }
-
-  const { isIdle } = useIdleTimer({
-    timeout: 1000 * 20,
-    onIdle: handleOnIdle,
-    onActive: handleOnActive
+  
+  const { isIdle, start: idleTimerStart, pause: idleTimerPause } = useIdleTimer({
+    timeout: 1000 * 8
   })
-  const idleRef = useRef<boolean>(isIdle());
+  useEffect(() => {
+    idleRef.current = isIdle();
+  });
 
-  // IDLE SIDE EFFECT UPDATER
-  useEffect(() => {
-    const updateIdleRef = () => {
-        idleRef.current = isIdle();
-    }
-    updateIdleRef();
-  }, [isIdle, idleRef])
-     // Initialize Inputs with API Values
-  useEffect(() => {
-    const updateFields = () => {
-      if ( idleRef.current || (1000 > 100/Math.random())) {
-        const _bestNumber = currentBestNumber?.toNumber() ?? 6829988;
-        update({
-          fromBlockNumber: _bestNumber - 1,
-          toBlockNumber: _bestNumber
-        });
-    
-        form.setFieldsValue({
-          fromBlockNumber: _bestNumber - 1,
-          toBlockNumber: _bestNumber
-        });
+  const onFocusFields = useCallback(() => {
+      idleTimerStart();
+      idleTimerPause();
+  }, [idleTimerStart, idleTimerPause])
+
+  const onBlurFields = useCallback(() => {
+      idleTimerStart();
+  }, [idleTimerStart])
+  
+
+  // Initialize Inputs with API Values
+  const setDefaultsFromAPI = useCallback(async (num?: number) => {
+      if (!num) {
+        const _bestNumber = await firstValueFrom(api.derive.chain.bestNumberFinalized());
+        num = _bestNumber.toNumber();
       }
+      const _data = {
+        fromBlockNumber: num - 1,
+        toBlockNumber: num
+      };
+
+      initFormData.toBlockNumber = num;
+      initFormData.fromBlockNumber = num - 1;
+
+      update(_data);
+      form.setFieldsValue(_data);
+      return Promise.resolve();
+
+    }, [api, update, form, initFormData]);
+
+  useEffect(() => {
+    if (idleRef.current && !isSearching) {
+      setDefaultsFromAPI(currentBestNumber?.toNumber());
     }
-    mountedRef.current && updateFields()
-  }, [mountedRef, currentBestNumber, idleRef, update, form]);
+    else if (isDefaultSet.current == false && !isSearching) {
+      setDefaultsFromAPI(currentBestNumber?.toNumber());
+      isDefaultSet.current = true;
+    }
+  }, [idleRef, update, form, api,
+     setDefaultsFromAPI, currentBestNumber, isSearching]);
 
   return (
     <>
@@ -214,10 +250,12 @@ const ExplorerPage: FC = () => {
         <CFormItem
           initialValue={initFormData.rpcUrl}
           name='rpcUrl'
-          // rules={rpcRules}
+          rules={rpcRules}
         >
           <Input 
             prefix={(<CPrefix>RPC URL:</CPrefix>)}
+            onFocus={onFocusFields}
+            onBlur={onBlurFields}
           />
         </CFormItem>
 
@@ -228,6 +266,8 @@ const ExplorerPage: FC = () => {
         >
           <Input 
             prefix={(<CPrefix>Blocknumber (FROM):</CPrefix>)}
+            onFocus={onFocusFields}
+            onBlur={onBlurFields}
           />
         </CFormItem>
 
@@ -238,6 +278,8 @@ const ExplorerPage: FC = () => {
         >
           <Input 
             prefix={(<CPrefix>Blocknumber (TO):</CPrefix>)}
+            onFocus={onFocusFields}
+            onBlur={onBlurFields}
           />
         </CFormItem>
         {!isEmpty(errorMessage) && ( 

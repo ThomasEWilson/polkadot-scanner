@@ -1,50 +1,47 @@
-// Copyright 2017-2021 @polkadot/app-explorer authors & contributors
+// Copyright 2017-2021 @polkadot/react-query authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect, useState } from 'react';
-// import { useParams } from 'react-router-dom';
+import type { Header } from '@polkadot/types/interfaces';
+
+import React, {useState} from 'react';
 
 import { useApi } from '/react-environment/state/modules/api/hooks';
 import useSubscription from '/lib/useSubscription';
 import { switchMap } from 'rxjs';
 
+interface Props {
+  className?: string;
+  label?: React.ReactNode;
+}
 
-import BlockByNumberRange from './ByNumberRange';
-import { BlockNumber } from '@polkadot/types/interfaces';
-
-function Entry (): React.ReactElement | null {
-  const api = useApi();
-  // const { value } = useParams<{ value: string }>();
-  const [bestNumber, setBestNumber] = useState<BlockNumber>();
-  // const [stateValue, setStateValue] = useState<string | undefined>(value);
-
+function BestHash ({ className = '', label }: Props): React.ReactElement<Props> {
+  const api = useApi()
+  const [newHeader, setHeader] = useState<Header>();
+  
   useSubscription(() =>
     api.isReady
       .pipe(
         switchMap((api) => 
-          api.derive.chain.bestNumber()
+            api.rpc.chain.subscribeNewHeads()
         )
       )
       .subscribe({
-        next: (h) => setBestNumber(h),
+        next: (h) => setHeader(h),
         error: (e) => console.error(e),
-        complete: () => console.log('')
+        complete: () => console.log('Event Complete: Switching Providers or Losing connection to Node')
       }
     ), [api]
   )
 
-  return (
-    <>
-      {/* <Query /> */}
-      {bestNumber && 
-        <BlockByNumberRange
-          from={bestNumber}
-          to={bestNumber}
-        />
-      }
+  // if (newHeader)
+  // newHeader.number.unwrap().subn(500)
 
-    </>
+
+  return (
+    <div className={className}>
+      {newHeader?.hash.toHex()}
+    </div>
   );
 }
 
-export default React.memo(Entry);
+export default React.memo(BestHash);

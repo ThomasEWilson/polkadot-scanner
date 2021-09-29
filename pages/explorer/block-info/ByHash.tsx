@@ -28,10 +28,10 @@ interface Props {
 }
 
 interface BlockEventDetails {
-  key?: number | string;
-  blocknumber?: number;
-  eventName?: string;
-  record?: EventRecord;
+  key: number | string;
+  blockNumber: number;
+  eventName: string;
+  record: EventRecord;
 }
 
 const ErrorBtn = styled(Button).attrs({ as: Button })`
@@ -93,6 +93,7 @@ const byHashReducer = (state: State, action) => {
   }
 };
 
+
 function BlockByHash({ className = '', searchProps: { from, to } }: Props): React.ReactElement<Props> {
   const api = useApi();
 
@@ -150,18 +151,49 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
         const types = event.typeDef;
 
         const { meta, method, section } = event
-        return event ? (<Expander
-          summary={`${section}.${method}`}
-          summaryMeta={meta}></Expander>)
+        return event ? (
+          <Expander
+            summary={`${section}.${method}`}
+            summaryMeta={meta}>
+
+            </Expander>
+          )
           : <></>;
       }
+      
   
       const columns: ColumnsType<BlockEventDetails> = [
-        { title: 'Block Number', dataIndex: 'blocknumber' },
-        { title: 'Event Name', dataIndex: 'eventName' },
+        { title: 'Block Number', dataIndex: 'blockNumber',
+          sorter: (a, b) => a.blockNumber - b.blockNumber,
+          sortDirections: ['descend']
+        },
+        { title: 'Event Name', dataIndex: 'eventName',
+          defaultSortOrder: 'descend',
+          filters: [
+            {
+              text: 'System',
+              value: 'system',
+            },
+            {
+              text: 'Balances',
+              value: 'balances',
+            },
+            {
+              text: 'Staking',
+              value: 'staking',
+            },
+            {
+              text: 'Treasury',
+              value: 'treasury',
+            }
+          ],
+          onFilter: (value, record) => record.eventName.includes(value.toString()),
+          sorter: (a, b) => a.eventName.localeCompare(b.eventName)
+        },
         {
           title: 'Event Action',
           dataIndex: 'record',
+          sorter: (a, b) => a.record.event.meta.docs.map((d) => d.toString().trim()).toString().length - b.record.event.meta.docs.map((d) => d.toString().trim()).toString().length,
           render: (row) => ExpanderFactory(row)
         },
       ];
@@ -178,7 +210,7 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
         eRows.push(
           {
             key: `${blockNumber} - ${eventCountPerBlock}`,
-            blocknumber: blockNumber,
+            blockNumber: blockNumber ?? 0,
             eventName: record.event.section.toString(),
             record: record
           });

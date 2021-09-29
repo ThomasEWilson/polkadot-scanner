@@ -17,7 +17,7 @@ import Router from 'next/router';
 export type PolkascanProps = React.PropsWithChildren<{
     config: ApplicationConfig;
     sidebarConfig: SidebarConfig;
-    router: typeof Router;
+    router: any;
 }>;
 
 //check if you are on the client (browser) or server

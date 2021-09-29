@@ -4,7 +4,7 @@ import ApplicationConfig from '../react-environment/types'
 
 export const config: ApplicationConfig = {
   endpoints: {
-    'Host By Parity': 'wss://rpc.polkadot.io',
+    'url': 'wss://rpc.polkadot.io',
   },
   name: 'Polkascanner Challenge',
   subscanBaseUrl: 'https://polkadot.subscan.io/',

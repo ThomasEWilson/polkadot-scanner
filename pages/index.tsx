@@ -130,11 +130,11 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
     const body = { encrypted: encrypted, nonce: nonce };
 
     try {
-      const { isLoggedIn } = await fetchJson("/api/login", {
+      const { isLoggedIn } = await fetchJson(["/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-      });
+      }]);
       mutateUser(isLoggedIn)
     } catch (error: any) {
       console.error("Failed attempted login: ", error);
@@ -165,7 +165,12 @@ const Login: React.FC<LoginProps> = ({ stringu8a_Secret, stringu8a_Nonce }) => {
           name='password'
           rules={[{ required: true, message: 'Please Input the App Password!' }]}
         >
-          <CInput/>
+          <CInput
+            onKeyDownCapture={ (e) => {
+              if (e.code.includes('Enter'))
+                loginFn();
+            }}
+          />
         </FormItem>
         {!isEmpty(errorMessage) && ( 
               <ErrorBtn
