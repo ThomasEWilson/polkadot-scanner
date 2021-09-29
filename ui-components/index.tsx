@@ -16,6 +16,7 @@ export { FlexBox as FlexBox } from './Box';
 export { InlineBlockBox as InlineBlockBox } from './Box';
 export { PaddingBox as PaddingBox } from './Box';
 export { SpaceBox as SpaceBox } from './Box';
+export { default as BlocksByNumberRange } from './block-info/ByHash';
 
 export { 
     PageContent, 

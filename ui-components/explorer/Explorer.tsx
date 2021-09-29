@@ -87,7 +87,7 @@ const ExplorerPage: FC = () => {
   const [form] = Form.useForm<FormData>();
   const initFormData: FormData = useMemo(() => {
     return {
-      rpcUrl: 'wss://rpc.polkadot.io',
+      rpcUrl: POLKAENDPOINT,
       fromBlockNumber: 6829987,
       toBlockNumber: 6829988 
     }
@@ -158,29 +158,31 @@ const ExplorerPage: FC = () => {
   const handlePreCheck = useCallback(async () => {
     try {
       await form.validateFields();
-    } catch (e) {
-      return () => {
-        setErrorMessage('Whoops: Validation Error. Try a different input, reset the app, or use defaults by going idle.');
+    } 
+    catch (e) {
+        setErrorMessage('Whoops: Validation Error. Ctrl+F5 or use defaults by going idle for ease');
         return false;
-      };
     }
     return true;
   }, [form]);
 
   //   Action on search
   const search = useCallback(async () => {
+      const _cached = { 
+        from: dataRef.current.fromBlockNumber,
+        to: dataRef.current.toBlockNumber,
+        rpcUrl: dataRef.current.rpcUrl
+      };
       if (isSearching) resetQueryState();
-
-      if (await handlePreCheck()
-            && isNumber(dataRef.current.fromBlockNumber) && isNumber(dataRef.current.toBlockNumber)) {
-        if (POLKAENDPOINT !== dataRef.current.rpcUrl) {
+      if (await handlePreCheck() && isNumber(_cached.from) && isNumber(_cached.to)) {
+        if (POLKAENDPOINT !== _cached.rpcUrl) {
             api.disconnect();
-            setFirstEndpointRef.current({'url': dataRef.current.rpcUrl});
+            setFirstEndpointRef.current({'url': _cached.rpcUrl});
         }
         setErrorMessage(``);
         setSearching(true);
-        const from = new BN(dataRef.current.fromBlockNumber) as BlockNumber;
-        const to = new BN(dataRef.current.toBlockNumber) as BlockNumber;
+        const from = new BN(_cached.from) as BlockNumber;
+        const to = new BN(_cached.to) as BlockNumber;
         setSearchParams({from, to} as BlockNumberProps);
         isDefaultSet.current = false;
       } else
@@ -218,6 +220,7 @@ const ExplorerPage: FC = () => {
         num = _bestNumber.toNumber();
       }
       const _data = {
+        rpcUrl: POLKAENDPOINT,
         fromBlockNumber: num - 1,
         toBlockNumber: num
       };
