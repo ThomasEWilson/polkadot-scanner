@@ -83,6 +83,7 @@ export const CardHeader: FC<CardHeaderProps> = memo(({ children, extra, title, .
 
 export const CardContent = styled.div<CardContentProps>`
   padding: ${({ padding }) => padding || '0'};
+  border-radius: 8px;
 `;
 
 CardHeader.displayName = 'CardHeader';

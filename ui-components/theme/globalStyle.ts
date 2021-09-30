@@ -60,4 +60,18 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0;
   padding: 0;
 }
+
+.eventTableStyles .ant-table-container .ant-table-content table .ant-table-thead tr th:first-child{
+    border-top-left-radius: 15px !important;
+    border-bottom-left-radius: 15px !important;
+  } 
+
+.eventTableStyles .ant-table-container .ant-table-content table .ant-table-thead tr th:last-child{
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.ant-table {
+  border-radius: 16px !important;
+}
 `;

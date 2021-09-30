@@ -1,7 +1,8 @@
 // // this file is a wrapper with defaults to be used in both API routes and `getServerSideProps` functions
-import { withIronSession } from 'next-iron-session'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { Handler, withIronSession } from 'next-iron-session'
 
-export default function withSession(handler: any) {
+export default function withSession(handler: Handler<NextApiRequest,NextApiResponse>) {
   return withIronSession(handler, {
     password: process.env.SECRET_COOKIE_PASSWORD ?? '',
     cookieName: 'ThomasEWilson/polkadotscanner-challege',

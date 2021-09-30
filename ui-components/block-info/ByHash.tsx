@@ -172,7 +172,6 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
     const mapEventsToTable = () => {
       const ExpanderFactory = (record: EventRecord) => {
         const event = record.event;
-        const phase = record.phase;
         const types = event.typeDef;
         const { meta, method, section, data } = event
 
@@ -264,7 +263,7 @@ function BlockByHash({ className = '', searchProps: { from, to } }: Props): Reac
               </ErrorBtn>)
               : isLoading || !rows || !cols
                 ? (<CardLoading />)
-                : (<Table<BlockEventDetails> columns={cols} dataSource={rows} pagination={{ pageSize: 50, hideOnSinglePage: true, size: 'small', position: ['topRight'] }} />)
+                : (<Table<BlockEventDetails> className="eventTableStyles" rowClassName={() => "rowStyles"} columns={cols} dataSource={rows} pagination={{ pageSize: 50, hideOnSinglePage: true, size: 'small', position: ['topRight'] }} />)
             }
           </Card.Content>
         </Card>

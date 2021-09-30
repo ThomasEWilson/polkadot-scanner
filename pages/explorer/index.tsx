@@ -61,9 +61,10 @@ interface ServerProps {
   };
 }
 
-export const getServerSideProps = withSession(async function ({ req, res }) {
+
+export const getServerSideProps = withSession(async function (props: any) {
   // Get the user's session based on the request
-  const user = req.session.get('user')
+  const user = props.req.session.get('user');
 
   if (!user) {
     return {
@@ -81,32 +82,18 @@ export const getServerSideProps = withSession(async function ({ req, res }) {
 
 const Explorer: NextPage<ServerProps> = ({ user }) => {   
   
+  const api = useApi()
+  const currentBestNumber = useBestNumber();
+
+  const idleRef = useRef<boolean>(true);
+  const requiredFlag = useRef<boolean>(true);
   const setTitleRef = useRef<(title: string) => void>(useSetTitle());
   const setFirstEndpointRef = useRef<(firstEndpoint: Record<string, string>) => void>(useSetFirstEndpoint());
   const isDefaultSet = useRef<boolean>(false);
-
-  useEffect(() => {
-    const updateTitle = () => {
-      setTitleRef.current('Polkadot Block-Range Explorer');
-    }
-    if (isDefaultSet.current == false) {
-      updateTitle();
-    }
-  }, [setTitleRef, isDefaultSet]);
-
-  const api = useApi()
-  const endpoints = useEndpoints()
-  const setEndpoints = useSetEndpoints();
-  const currentBestNumber = useBestNumber();
-
+  
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isSearching, setSearching] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState<BlockNumberProps | null>(null);
-  
-  const mountedRef = useIsMountedRef();
-  const idleRef = useRef<boolean>(true);
-  
-
   
   const [form] = Form.useForm<FormData>();
   const initFormData: FormData = useMemo(() => {
@@ -116,9 +103,12 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
       toBlockNumber: 6829988 
     }
   }, []);
-
   const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
-  const requiredFlag = useRef<boolean>(true);
+
+  useEffect(() => {
+    const updateTitle = () => setTitleRef.current('Polkadot Block-Range Explorer');
+    (isDefaultSet.current == false) && updateTitle();
+  }, [setTitleRef, isDefaultSet]);
 
   const fromBlockRules = useNumberRule({
     required: () => requiredFlag.current,
@@ -136,7 +126,6 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
     max: currentBestNumber?.toNumber() ?? 6829988,
     maxMessage: 'Must be lessthan or equal (<=) current Block Number'
   });
-
   const rpcRules = useRPCRule({ WSS_REGEX: /^(wss|ws):\/\/([a-zA-Z0-9]{0,9}(?:\.[a-zA-Z0-9]{0,9}){0,}|[a-zA-Z0-9]+):?([0-9]{0,5})/gmi});
 
   const setRPCValue = useCallback((rpcVal?: string) => {
@@ -179,6 +168,12 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
     // update(changed);
   }, [setRPCValue, setFromBlockValue, setToBlockValue]);
 
+  const resetQueryState = useCallback(() => {
+    setSearchParams(null);
+    setSearching(false);
+    setErrorMessage(``);
+  }, [setSearchParams,setSearching,setErrorMessage]);
+
   const handlePreCheck = useCallback(async () => {
     try {
       await form.validateFields();
@@ -192,34 +187,27 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
 
   //   Action on search
   const search = useCallback(async () => {
-      const _cached = { 
-        from: dataRef.current.fromBlockNumber,
-        to: dataRef.current.toBlockNumber,
-        rpcUrl: dataRef.current.rpcUrl
-      };
-      if (isSearching) resetQueryState();
-      if (await handlePreCheck() && isNumber(_cached.from) && isNumber(_cached.to)) {
-        if (POLKAENDPOINT !== _cached.rpcUrl) {
-            api.disconnect();
-            setFirstEndpointRef.current({'url': _cached.rpcUrl});
-        }
-        setErrorMessage(``);
-        setSearching(true);
-        const from = new BN(_cached.from) as BlockNumber;
-        const to = new BN(_cached.to) as BlockNumber;
-        setSearchParams({from, to} as BlockNumberProps);
-        isDefaultSet.current = false;
-      } else
-          setErrorMessage(`Try + numbers or simply go idle for defaults.`);
-  }, [dataRef, handlePreCheck, isDefaultSet, setFirstEndpointRef, isSearching]);
+    const _cached = { 
+      from: dataRef.current.fromBlockNumber,
+      to: dataRef.current.toBlockNumber,
+      rpcUrl: dataRef.current.rpcUrl
+    };
+    isSearching && resetQueryState();
+    if (await handlePreCheck() && isNumber(_cached.from) && isNumber(_cached.to)) {
+      if (POLKAENDPOINT !== _cached.rpcUrl) {
+          api.disconnect();
+          setFirstEndpointRef.current({'url': _cached.rpcUrl});
+      }
+      setErrorMessage(``);
+      setSearching(true);
+      const from = new BN(_cached.from) as BlockNumber;
+      const to = new BN(_cached.to) as BlockNumber;
+      setSearchParams({from, to} as BlockNumberProps);
+      isDefaultSet.current = false;
+    } else
+        setErrorMessage(`Try + numbers or simply go idle for defaults.`);
+  }, [api, dataRef, handlePreCheck, isDefaultSet, setFirstEndpointRef, isSearching, resetQueryState]);
 
-  
-  const resetQueryState = () => {
-    setSearchParams(null);
-    setSearching(false);
-    setErrorMessage(``);
-  }
-  
   const { isIdle, start: idleTimerStart, pause: idleTimerPause } = useIdleTimer({
     timeout: 1000 * 8
   })
@@ -236,7 +224,6 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
       idleTimerStart();
   }, [idleTimerStart])
   
-
   // Initialize Inputs with API Values
   const setDefaultsFromAPI = useCallback(async (num?: number) => {
       if (!num) {
@@ -258,6 +245,7 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
 
     }, [api, update, form, initFormData]);
 
+  // MAIN Side-effect: Check Idle or setDefaultsNeed --> set latest bestNumber Defaults to form.
   useEffect(() => {
     if (idleRef.current && !isSearching) {
       setDefaultsFromAPI(currentBestNumber?.toNumber());
