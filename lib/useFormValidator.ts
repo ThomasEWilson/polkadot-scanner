@@ -50,7 +50,7 @@ export const useNumberRule = (config?: NumberRule): Rule[] => {
 
           if (_config?.max && toNumber(_config?.max) < _value) throw new Error(_config?.maxMessage || `Max is ${getNumber(_config?.max)}`);
 
-          if (_config?.min && toNumber(_config?.min) > _value) throw new Error(_config?.maxMessage || `Min is ${getNumber(_config?.min)}`);
+          if (_config?.min && toNumber(_config?.min) > _value) throw new Error(_config?.minMessage || `Min is ${getNumber(_config?.min)}`);
 
           if (getFunctionableValue(_config?.required) && (!_value)) throw new Error(_config?.requiredMessage || 'Valid BlockNumber is required');
 

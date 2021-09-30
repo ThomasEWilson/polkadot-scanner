@@ -52,15 +52,12 @@ interface BlockNumberProps {
   from: BlockNumber | BN;
   to: BlockNumber | BN;
 }
-
-const POLKAENDPOINT = 'wss://rpc.polkadot.io';
-
 interface ServerProps {
   user: {
     isLoggedIn: boolean;
   };
 }
-
+const POLKAENDPOINT = 'wss://rpc.polkadot.io';
 
 export const getServerSideProps = withSession(async function (props: any) {
   // Get the user's session based on the request
@@ -99,8 +96,8 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
   const initFormData: FormData = useMemo(() => {
     return {
       rpcUrl: POLKAENDPOINT,
-      fromBlockNumber: 6829987,
-      toBlockNumber: 6829988 
+      fromBlockNumber: 1,
+      toBlockNumber: 7000000 
     }
   }, []);
   const { data, dataRef, update } = useDataChanger<FormData>(initFormData);
@@ -110,21 +107,45 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
     (isDefaultSet.current == false) && updateTitle();
   }, [setTitleRef, isDefaultSet]);
 
+
+  const getRuleByType = useCallback((type: string): number => {
+    switch (type) {
+      case "from-min":
+        return (dataRef?.current?.toBlockNumber) ? toNumber(dataRef?.current?.toBlockNumber) - 50 : 0;
+      case "from-max":
+        return (dataRef?.current?.toBlockNumber) 
+                ? toNumber(dataRef?.current?.toBlockNumber) - 1
+                : (currentBestNumber?.toNumber())
+                  ? currentBestNumber?.toNumber() - 1
+                  : 7000000; 
+      case "to-min":
+        return (dataRef?.current?.fromBlockNumber) ? toNumber(dataRef?.current?.fromBlockNumber) + 1 : 0;
+      case "to-max":
+        return (dataRef?.current?.fromBlockNumber) 
+                ? toNumber(dataRef?.current?.fromBlockNumber) + 50 
+                : (currentBestNumber?.toNumber())
+                  ? currentBestNumber?.toNumber() 
+                  : 7000001; 
+      default:
+        return 0;
+    }
+  }, [dataRef, currentBestNumber]);
+
   const fromBlockRules = useNumberRule({
     required: () => requiredFlag.current,
-    requiredMessage: `Blocknumber required (+int <= toBlockNumber)`,
-    min: 0,
-    minMessage: 'Must be greater than zero',
-    max: dataRef?.current?.toBlockNumber ?? currentBestNumber?.toNumber() ?? 6829988,
-    maxMessage: 'Must be less than (<) BlockNumber (TO) - 1'
+    requiredMessage: `Blocknumber required (1 < +int-START < END)`,
+    min: getRuleByType('from-min'),
+    minMessage: 'Req: Non-Zero value not more than 50 blocks height from END.',
+    max: getRuleByType('from-max'),
+    maxMessage: 'Req: less than (<) BlockNumber (END)'
   });
   const toBlockRules = useNumberRule({
     required: () => requiredFlag.current,
-    requiredMessage: `Blocknumber required (+int >= fromBlockNumber)`,
-    min: toNumber(dataRef?.current?.fromBlockNumber) ?? 0,
-    minMessage: 'Must be greater than fromBlockNumber',
-    max: currentBestNumber?.toNumber() ?? 6829988,
-    maxMessage: 'Must be lessthan or equal (<=) current Block Number'
+    requiredMessage: `Blocknumber required (START < +int-END < best BlockNumber)`,
+    min: getRuleByType('to-min'),
+    minMessage: 'Req: START < +int-END, not more than 50 blocks height from START.',
+    max: getRuleByType('to-max'),
+    maxMessage: 'Req: (<=) best BlockNumber, not more than 50 blocks height from START'
   });
   const rpcRules = useRPCRule({ WSS_REGEX: /^(wss|ws):\/\/([a-zA-Z0-9]{0,9}(?:\.[a-zA-Z0-9]{0,9}){0,}|[a-zA-Z0-9]+):?([0-9]{0,5})/gmi});
 
@@ -185,8 +206,8 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
     return true;
   }, [form]);
 
-  //   Action on search
-  const search = useCallback(async () => {
+  // Scan for Blocks
+  const scan = useCallback(async () => {
     const _cached = { 
       from: dataRef.current.fromBlockNumber,
       to: dataRef.current.toBlockNumber,
@@ -232,12 +253,9 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
       }
       const _data = {
         rpcUrl: POLKAENDPOINT,
-        fromBlockNumber: num - 1,
         toBlockNumber: num
       };
-
       initFormData.toBlockNumber = num;
-      initFormData.fromBlockNumber = num - 1;
 
       update(_data);
       form.setFieldsValue(_data);
@@ -265,24 +283,12 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
     >
       <CCard variant='gradient-border'>
         <CFormItem
-          initialValue={initFormData.rpcUrl}
-          name='rpcUrl'
-          rules={rpcRules}
-        >
-          <Input 
-            prefix={(<CPrefix>RPC URL:</CPrefix>)}
-            onFocus={onFocusFields}
-            onBlur={onBlurFields}
-          />
-        </CFormItem>
-
-        <CFormItem
           initialValue={initFormData.fromBlockNumber}
           name='fromBlockNumber'
           rules={fromBlockRules}
         >
           <Input 
-            prefix={(<CPrefix>Blocknumber (FROM):</CPrefix>)}
+            prefix={(<CPrefix>Blocknumber (START):</CPrefix>)}
             onFocus={onFocusFields}
             onBlur={onBlurFields}
           />
@@ -294,11 +300,24 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
           rules={toBlockRules}
         >
           <Input 
-            prefix={(<CPrefix>Blocknumber (TO):</CPrefix>)}
+            prefix={(<CPrefix>Blocknumber (END):</CPrefix>)}
             onFocus={onFocusFields}
             onBlur={onBlurFields}
           />
         </CFormItem>
+
+        <CFormItem
+          initialValue={initFormData.rpcUrl}
+          name='rpcUrl'
+          rules={rpcRules}
+        >
+          <Input 
+            prefix={(<CPrefix>RPC URL:</CPrefix>)}
+            onFocus={onFocusFields}
+            onBlur={onBlurFields}
+          />
+        </CFormItem>
+
         {!isEmpty(errorMessage) && ( 
               <ErrorBtn
                 disabled
@@ -307,9 +326,9 @@ const Explorer: NextPage<ServerProps> = ({ user }) => {
               </ErrorBtn>
         )}
         <SearchBtn
-          onClick={() => search()}
+          onClick={() => scan()}
         >
-          {'Search'}
+          {'Scan'}
           
         </SearchBtn>
       </CCard>
