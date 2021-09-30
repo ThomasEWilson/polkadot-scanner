@@ -11,7 +11,7 @@ import { useSetTitle } from '/react-environment/state/modules/application/hooks'
 import { Button, Card, Form, FormItem, Input, BlocksByNumberRange } from '/ui-components'
 import { isEmpty, isNumber, toNumber } from 'lodash';
 import { BlockNumber } from '@polkadot/types/interfaces';
-import { useApi, useEndpoints, useSetEndpoints, useSetFirstEndpoint } from '/react-environment/state/modules/api/hooks';
+import { useApi, useSetFirstEndpoint } from '/react-environment/state/modules/api/hooks';
 import { firstValueFrom } from 'rxjs';
 
 
@@ -59,25 +59,26 @@ interface ServerProps {
 }
 const POLKAENDPOINT = 'wss://rpc.polkadot.io';
 
-export const getServerSideProps = withSession(async function (props: any) {
-  // Get the user's session based on the request
-  const user = props.req.session.get('user');
+// Commented out server-sider-rendering for deployment, not getting the page to load, going with static side rendering.
+// export const getServerSideProps = withSession(async function (props: any) {
+//   // Get the user's session based on the request
+//   const user = props.req.session.get('user');
 
-  if (!user) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    }
-  }
+//   if (!user) {
+//     return {
+//       redirect: {
+//         destination: '/',
+//         permanent: false,
+//       },
+//     }
+//   }
 
-  return {
-    props: { user },
-  }
-})
+//   return {
+//     props: { user },
+//   }
+// })
 
-const Explorer: NextPage<ServerProps> = ({ user }) => {   
+const Explorer: NextPage = () => {   
   
   const api = useApi()
   const currentBestNumber = useBestNumber();
