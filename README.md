@@ -1,42 +1,49 @@
 ## Polkadot Scanner Server
 
-    "@polkadot/app-contracts": "^0.39.1",
-    "@polkadot/react-components": "^0.39.1",
-    "@polkadot/react-hooks": "^0.39.1",
-    "@polkadot/react-params": "^0.39.1",
-    "@polkadot/react-query": "^0.39.1",
-    "@polkadot/react-signer": "^0.39.1",
-    "@polkadot/ui-assets": "^0.85.3",
-    
-    "@polkadot/util": "^7.3.1",
-
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+
 ## Getting Started
 
-First, run the development server:
+First, ensure you have a `.env.local` file in the project directory with these contents.
+
+```env
+SECRET_COOKIE_PASSWORD='2gyZ3GDw3LHZQKDhPmPDL3sjREVRXPr8'
+SECRET_u8a='248,184,9,213,71,133,129,213,122,191,201,202,7,112,99,210,50,119,130,162,134,99,246,180,93,135,182,9,210,217,1,254'
+NONCE='239,191,61,41,3,17,203,156,37,199,164,3,166,148,199,162,10,214,76,99,74,127,254,243'
+ENCRYPTED_PASS='198,134,210,34,146,50,19,72,75,254,47,146,252,99,79,194,238,206,159,56,173,247,39,69,71,117,230,7,121,95'
+```
+
+Save `.env.local`;
+
+---
+
+Now, ask Yarn to get your dependencies:
 
 ```bash
-npm run dev
-# or
+yarn 
+```
+
+---
+
+Finally, run the development server:
+
+```bash
 yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+You can start editing the page by modifying `pages/index.tsx`. This is the login page.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+---
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## Production Build
 
-## Learn More
+```bash
+yarn build
+```
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
